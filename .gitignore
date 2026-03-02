@@ -1,0 +1,19 @@
+# File compilati
+*.class
+
+# Directory di build (se userai Maven o Gradle in futuro)
+target/
+build/
+bin/
+
+# File degli IDE (IntelliJ, Eclipse, VS Code)
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# File di sistema
+.DS_Store
+Thumbs.db
