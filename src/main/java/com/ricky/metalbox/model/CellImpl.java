@@ -14,6 +14,10 @@ public class CellImpl implements Cell{
         return this.occupied;
     }
 
+    public void setOccupied(boolean occupied) {
+        this.occupied = occupied;
+    }
+
     public Position getPosition() {
         return this.position;
     }

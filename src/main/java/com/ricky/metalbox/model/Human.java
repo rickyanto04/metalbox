@@ -17,9 +17,18 @@ public class Human implements Entity{
     private boolean alive = true;
     private Map<Entity, Boolean> friends = new HashMap<>();
 
+    public Human(final Position birthPosition) {
+        this.anchorPosition = birthPosition;
+    }
+
     @Override
     public boolean isAlive() {
         return this.alive;
+    }
+
+    @Override
+    public void setAnchorPosition(Position p) {
+        this.anchorPosition = p;
     }
 
     @Override
