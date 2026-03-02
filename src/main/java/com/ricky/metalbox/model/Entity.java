@@ -1,4 +1,4 @@
-package com.ricky.metalbox.model.Entity;
+package com.ricky.metalbox.model;
 
 public interface Entity {
 
