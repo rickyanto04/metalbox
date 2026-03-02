@@ -1,7 +1,7 @@
 package com.ricky.metalbox.model;
 
-import java.util.List;
-
 public interface Land {
-    List<Cell> getOccupiedCells();
+    public boolean addEntity(Entity e);
+
+    public boolean moveEntity(Entity e);
 }

@@ -7,12 +7,34 @@ import java.util.Map;
 
 public class Human implements Entity{
 
+    private final List<Position> shape = List.of(
+        new Position(0, 0),
+        new Position(2, 0),
+        new Position(1, 1),
+        new Position(1, 2)
+    );
+    private Position anchorPosition;
     private boolean alive = true;
     private Map<Entity, Boolean> friends = new HashMap<>();
 
     @Override
     public boolean isAlive() {
         return this.alive;
+    }
+
+    @Override
+    public Position getAnchorPosition() {
+        return this.anchorPosition;
+    }
+
+    @Override
+    public List<Position> getOccupiedPositions() {
+        List<Position> occupiedPos = new ArrayList<>();
+        occupiedPos.add(new Position(this.anchorPosition.getX() + this.shape.getFirst().getX(), this.anchorPosition.getY() + this.shape.getFirst().getY()));
+        occupiedPos.add(new Position(this.anchorPosition.getX() + this.shape.get(1).getX(), this.anchorPosition.getY() + this.shape.get(1).getY()));
+        occupiedPos.add(new Position(this.anchorPosition.getX() + this.shape.get(2).getX(), this.anchorPosition.getY() + this.shape.get(2).getY()));
+        occupiedPos.add(new Position(this.anchorPosition.getX() + this.shape.getLast().getX(), this.anchorPosition.getY() + this.shape.getLast().getY()));
+        return occupiedPos;
     }
 
     public void addFriend(final Entity friend) {

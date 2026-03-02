@@ -1,26 +1,27 @@
 package com.ricky.metalbox.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class LandImpl implements Land{
     private static final int landSize = 250;
     private final Cell[][] grid = new CellImpl[landSize][landSize];
 
     public LandImpl() {
-        // qui cosa metto? al momento non serve il costruttore
+        for (int i = 0; i < landSize; i++) {
+            for (int j = 0; j < landSize; j++) {
+                this.grid[j][i] = new CellImpl(new Position(j, i));
+            }
+        }
     }
 
     @Override
-    public List<Cell> getOccupiedCells() {
-        List<Cell> cellsList = new ArrayList<>();
-        for (int i = 0; i < landSize; i++) {
-            for (int j = 0; j < landSize; j++) {
-                if (this.grid[i][j].isOccupied()) {
-                    cellsList.add(c);
-                }
-            }
-        }
-        return cellsList;
+    public boolean addEntity(Entity e) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addEntity'");
     }
+
+    @Override
+    public boolean moveEntity(Entity e) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'moveEntity'");
+    }
+
 }
