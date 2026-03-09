@@ -1,8 +1,13 @@
 package com.ricky.metalbox.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class LandImpl implements Land{
     private static final int landSize = 250;
     private Cell[][] grid = new CellImpl[landSize][landSize];
+    private List<Entity> entities = new ArrayList<>();
 
     public LandImpl() {
         for (int i = 0; i < landSize; i++) {
@@ -21,6 +26,7 @@ public class LandImpl implements Land{
         }
 
         setEntityOccupation(e, true);
+        this.entities.add(e);
         return true;
     }
 
@@ -42,6 +48,11 @@ public class LandImpl implements Land{
 
         setEntityOccupation(e, true);
         return true;
+    }
+
+    @Override
+    public List<Entity> getEntities() {
+        return Collections.unmodifiableList(this.entities);
     }
 
     //helper 1
