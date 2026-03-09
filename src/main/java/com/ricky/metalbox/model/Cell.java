@@ -4,5 +4,7 @@ public interface Cell {
 
     boolean isOccupied();
 
-    //aggiungeremo in seguito il bioma
+    void setOccupied(boolean occupied);
+
+    Position getPosition();
 }

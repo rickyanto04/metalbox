@@ -46,14 +46,17 @@ public class Human implements Entity{
         return occupiedPos;
     }
 
+    @Override
     public void addFriend(final Entity friend) {
         this.friends.put(friend, true);
     }
 
+    @Override
     public void removeFriend(final Entity friend) {
         this.friends.remove(friend);
     }
 
+    @Override
     public List<Entity> getFriends() {
         List<Entity> friendsList = new ArrayList<>();
         for (final Entity e : this.friends.keySet()) {

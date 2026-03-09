@@ -10,4 +10,10 @@ public interface Entity {
     Position getAnchorPosition();
 
     List<Position> getOccupiedPositions();
+
+    void addFriend(Entity friend);
+
+    void removeFriend(Entity friend);
+
+    List<Entity> getFriends();
 }
