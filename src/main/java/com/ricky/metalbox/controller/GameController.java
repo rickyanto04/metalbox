@@ -80,16 +80,22 @@ public class GameController {
             // target nullo o entità arrivata a destinazione allora si genera nuovo target senza prendere in considerazione il bordo
             if (target == null || (current.getX() == target.getX() && current.getY() == target.getY())) {
 
-                //prima di ripartire l'entità decide quanto penserà
-                int thinkingTime = this.random.nextInt(96) + 5; // 1 a 5 secondi
-                entity.setThinkingTicks(thinkingTime);
+                // se l'entità è arrivata a destinazione/ target NON nullo, pensa
+                // se invece è appena spawnata / target è nullo, salta questo blocco e NON pensa
+                if (target != null) {
+                    int thinkingTime = this.random.nextInt(96) + 5; // 1 a 5 secondi
+                    entity.setThinkingTicks(thinkingTime);
+                }
 
                 int newX = this.random.nextInt(240) + 8;
                 int newY = this.random.nextInt(240) + 8;
                 target = new Position(newX, newY);
                 entity.setTargetPosition(target);
 
-                continue; // salta la fase di movement in quanto deve pensare prima di partire per la prossima meta
+                //salta la fase di movement in quanto deve pensare prima di partire per la prossima meta
+                if (entity.getThinkingTicks() > 0) {
+                    continue;
+                }
             }
 
             // direzione +1, 0, o -1 verso il target
