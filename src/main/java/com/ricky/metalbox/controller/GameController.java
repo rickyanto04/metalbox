@@ -6,9 +6,9 @@ import javafx.util.Duration;
 
 import java.util.Random;
 
-import com.ricky.metalbox.model.Entity;
-import com.ricky.metalbox.model.Land;
-import com.ricky.metalbox.model.Position;
+import com.ricky.metalbox.model.Entity.Entity;
+import com.ricky.metalbox.model.Land.Land;
+import com.ricky.metalbox.model.Utilities.Position;
 
 public class GameController {
 

@@ -1,4 +1,6 @@
-package com.ricky.metalbox.model;
+package com.ricky.metalbox.model.Cell;
+
+import com.ricky.metalbox.model.Utilities.Position;
 
 public class CellImpl implements Cell{
 

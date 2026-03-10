@@ -1,4 +1,4 @@
-package com.ricky.metalbox.model;
+package com.ricky.metalbox.model.Utilities;
 
 public class Position {
     private int x;

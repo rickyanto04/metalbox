@@ -1,8 +1,13 @@
-package com.ricky.metalbox.model;
+package com.ricky.metalbox.model.Land;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import com.ricky.metalbox.model.Cell.Cell;
+import com.ricky.metalbox.model.Cell.CellImpl;
+import com.ricky.metalbox.model.Entity.Entity;
+import com.ricky.metalbox.model.Utilities.Position;
 
 public class LandImpl implements Land{
     private static final int landSize = 250;

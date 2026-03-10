@@ -1,6 +1,8 @@
-package com.ricky.metalbox.model;
+package com.ricky.metalbox.model.Entity;
 
 import java.util.List;
+
+import com.ricky.metalbox.model.Utilities.Position;
 
 public interface Entity {
     boolean isAlive();
@@ -12,8 +14,4 @@ public interface Entity {
     List<Position> getOccupiedPositions();
 
     void addFriend(Entity friend);
-
-    void removeFriend(Entity friend);
-
-    List<Entity> getFriends();
 }

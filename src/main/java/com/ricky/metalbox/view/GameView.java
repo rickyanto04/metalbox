@@ -2,10 +2,10 @@ package com.ricky.metalbox.view;
 
 import java.util.Random;
 
-import com.ricky.metalbox.model.Entity;
-import com.ricky.metalbox.model.Human;
-import com.ricky.metalbox.model.Land;
-import com.ricky.metalbox.model.Position;
+import com.ricky.metalbox.model.Entity.Entity;
+import com.ricky.metalbox.model.Entity.Human;
+import com.ricky.metalbox.model.Land.Land;
+import com.ricky.metalbox.model.Utilities.Position;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

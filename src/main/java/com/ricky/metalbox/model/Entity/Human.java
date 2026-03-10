@@ -1,9 +1,11 @@
-package com.ricky.metalbox.model;
+package com.ricky.metalbox.model.Entity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+
+import com.ricky.metalbox.model.Utilities.Position;
 
 public class Human implements Entity{
 
@@ -15,7 +17,7 @@ public class Human implements Entity{
     );
     private Position anchorPosition;
     private boolean alive = true;
-    private Map<Entity, Boolean> friends = new HashMap<>();
+    private Set<Entity> friends = new HashSet<>();
 
     public Human(final Position birthPosition) {
         this.anchorPosition = birthPosition;
@@ -47,24 +49,7 @@ public class Human implements Entity{
     }
 
     @Override
-    public void addFriend(final Entity friend) {
-        this.friends.put(friend, true);
+    public void addFriend(final Entity e) {
+        this.friends.add(e);
     }
-
-    @Override
-    public void removeFriend(final Entity friend) {
-        this.friends.remove(friend);
-    }
-
-    @Override
-    public List<Entity> getFriends() {
-        List<Entity> friendsList = new ArrayList<>();
-        for (final Entity e : this.friends.keySet()) {
-            if (this.friends.get(e)) {
-                friendsList.add(e);
-            }
-        }
-        return friendsList;
-    }
-
 }

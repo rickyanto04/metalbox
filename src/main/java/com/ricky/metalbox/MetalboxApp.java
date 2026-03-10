@@ -1,8 +1,8 @@
 package com.ricky.metalbox;
 
 import com.ricky.metalbox.controller.GameController;
-import com.ricky.metalbox.model.Land;
-import com.ricky.metalbox.model.LandImpl;
+import com.ricky.metalbox.model.Land.Land;
+import com.ricky.metalbox.model.Land.LandImpl;
 import com.ricky.metalbox.view.GameView;
 
 import javafx.application.Application;
