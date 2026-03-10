@@ -12,6 +12,26 @@ import com.ricky.metalbox.model.Utilities.Position;
 
 public class GameController {
 
+    enum Around {
+        UP_LEFT(-1, -1),
+        UP_CENTER(-1, 0),
+        UP_RIGHT(-1, 1),
+        CENTER_LEFT(0, -1),
+        CENTER_CENTER(0, 0),
+        CENTER_RIGHT(0, 1),
+        DOWN_LEFT(1, -1),
+        DOWN_CENTER(1, 0),
+        DOWN_RIGHT(1, 1);
+
+        public final int x;
+        public final int y;
+
+        Around(final int x, final int y) {
+        this.x = x;
+        this.y = y;
+        }
+    }
+
     private final Land land;
     private final Runnable viewRepaintCallback;
     private final Timeline gameLoop;
@@ -36,15 +56,17 @@ public class GameController {
     }
 
     private void gameTick() {
-        updateLogic(); // aggiorniamo tutti gli spazi e le coordinate
+        movementLogic(); // aggiorniamo tutti gli spazi e le coordinate delle entità
+
+        friendshipLogic();
 
         if (this.viewRepaintCallback != null) {
             this.viewRepaintCallback.run(); // ridisegna!!
         }
     }
 
-    private void updateLogic() {
-        for (Entity entity : this.land.getEntities()) {
+    private void movementLogic() {
+        for (final Entity entity : this.land.getEntities()) {
             // numero tra -1 e 1 inclusi, in quanto l'entità sulla land 2D può muoversi
             // lungo l'asse x e y di soli tre valori, -1, 0, 1
             int deltaX = this.random.nextInt(3) - 1;
@@ -56,6 +78,17 @@ public class GameController {
                 Position newAnchorPos = new Position(currentAnchor.getX() + deltaX, currentAnchor.getY() + deltaY);
                 this.land.moveEntity(entity, newAnchorPos);
             }
+        }
+    }
+
+    private void friendshipLogic() {
+        for (final Entity entity : this.land.getEntities()) {
+            // per ogni entità controlliamo se nel 3x3 attorno al suo anchor sono presenti altre entità
+            // se non c'è alcuna entità si va avanti
+            // se le entità attorno rimangono vicine alla centrale per più di 10 secondi allora diventano amiche
+            // altrimenti si va avanti
+
+            // le entità con amici e le entità amiche diventano rosa
         }
     }
 }
