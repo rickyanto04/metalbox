@@ -22,6 +22,19 @@ public class MetalboxApp extends Application{
         // Usiamo la sintassi view::renderMap per passare il riferimento al metodo
         GameController controller = new GameController(land, view::renderMap);
 
+        view.getPauseButton().setOnAction(event -> {
+            controller.togglePause(); // Mette in pausa o riavvia
+
+            // Cambia il testo del bottone in base a cosa sta facendo ora il gioco
+            if (controller.isRunning()) {
+                view.getPauseButton().setText("pause simulation");
+                view.getPauseButton().setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: #ffcccc; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+            } else {
+                view.getPauseButton().setText("play simulation");
+                view.getPauseButton().setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: #ccffcc; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+            }
+        });
+
         // 4. Configurazione della finestra principale
         Scene scene = new Scene(view); // La root della Scene è direttamente la nostra GameView (che è uno StackPane)
 

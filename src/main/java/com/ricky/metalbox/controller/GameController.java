@@ -3,6 +3,7 @@ package com.ricky.metalbox.controller;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
+import javafx.animation.Animation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +41,18 @@ public class GameController {
         this.gameLoop.pause();
     }
 
+    public boolean isRunning() {
+        return this.gameLoop.getStatus() == Animation.Status.RUNNING;
+    }
+
+    public void togglePause() {
+        if (isRunning()) {
+            pause();
+        } else {
+            start();
+        }
+    }
+
     private void gameTick() {
         movementLogic(); // aggiorniamo tutti gli spazi e le coordinate delle entità
 
@@ -52,16 +65,49 @@ public class GameController {
 
     private void movementLogic() {
         for (final Entity entity : this.land.getEntities()) {
-            // numero tra -1 e 1 inclusi, in quanto l'entità sulla land 2D può muoversi
-            // lungo l'asse x e y di soli tre valori, -1, 0, 1
-            int deltaX = this.random.nextInt(3) - 1;
-            int deltaY = this.random.nextInt(3) - 1;
 
-            if (deltaX != 0 || deltaY != 0) {// nel caso l'entità voglia muoversi
-                Position currentAnchor = entity.getAnchorPosition();
+            // gestione thinking time
+            int thinkingTicks = entity.getThinkingTicks();
+            if (thinkingTicks > 0) {
+                // se l'entità sta riposando, riduco il tempo di attesa di 1 e passo alla prossima
+                entity.setThinkingTicks(thinkingTicks - 1);
+                continue;
+            }
 
-                Position newAnchorPos = new Position(currentAnchor.getX() + deltaX, currentAnchor.getY() + deltaY);
-                this.land.moveEntity(entity, newAnchorPos);
+            Position current = entity.getAnchorPosition();
+            Position target = entity.getTargetPosition();
+
+            // target nullo o entità arrivata a destinazione allora si genera nuovo target senza prendere in considerazione il bordo
+            if (target == null || (current.getX() == target.getX() && current.getY() == target.getY())) {
+
+                //prima di ripartire l'entità decide quanto penserà
+                int thinkingTime = this.random.nextInt(96) + 5; // 1 a 5 secondi
+                entity.setThinkingTicks(thinkingTime);
+
+                int newX = this.random.nextInt(240) + 8;
+                int newY = this.random.nextInt(240) + 8;
+                target = new Position(newX, newY);
+                entity.setTargetPosition(target);
+
+                continue; // salta la fase di movement in quanto deve pensare prima di partire per la prossima meta
+            }
+
+            // direzione +1, 0, o -1 verso il target
+            // restituisce -1 se target < current, 0 se uguale, 1 se target > current
+            int deltaX = Integer.compare(target.getX(), current.getX());
+            int deltaY = Integer.compare(target.getY(), current.getY());
+
+            if (deltaX != 0 || deltaY != 0) {
+                Position nextStep = new Position(current.getX() + deltaX, current.getY() + deltaY);
+                boolean movedSuccessfully = this.land.moveEntity(entity, nextStep);
+
+                // se moveentity restituisce false, significa che la strada è bloccata, reset del target a null
+                if (!movedSuccessfully) {
+                    entity.setTargetPosition(null);
+
+                    // confusione da 0.4 secondi a 1.2 secondi nel caso sbatta contro qualcosa dato !movedSuccesfully
+                    entity.setThinkingTicks(this.random.nextInt(5) + 2);
+                }
             }
         }
     }

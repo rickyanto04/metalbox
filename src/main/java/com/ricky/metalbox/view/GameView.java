@@ -14,6 +14,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.layout.VBox;
 
 public class GameView extends StackPane{
     private static final int TILE_SIZE = 3; // Dimensione in pixel di ogni cella
@@ -21,20 +22,33 @@ public class GameView extends StackPane{
 
     private final Land land;
     private final Canvas canvas;
+    private final Button pauseButton;
 
     public GameView(Land land) {
         this.land = land;
         this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 
         // Creazione del bottone per aggiungere le entità
-        Button btnAdd = createAddEntityButton();
+        Button addButton = createAddEntityButton();
 
-        // Aggiungiamo Canvas (sotto) e Bottone (sopra) al layout StackPane
-        this.getChildren().addAll(canvas, btnAdd);
+        this.pauseButton = new Button("pause simulation");
+        this.pauseButton.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: #ffcccc; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
-        // Posizioniamo il bottone in basso a destra con un po' di margine
-        StackPane.setAlignment(btnAdd, Pos.BOTTOM_RIGHT);
-        StackPane.setMargin(btnAdd, new Insets(20));
+        // Creiamo un contenitore verticale per impilare i due bottoni
+        VBox buttonContainer = new VBox(10); // 10 è lo spazio (gap) tra i bottoni
+        buttonContainer.setAlignment(Pos.BOTTOM_RIGHT);
+        buttonContainer.getChildren().addAll(pauseButton, addButton);
+
+        // Aggiungiamo Canvas e VBox al layout principale
+        this.getChildren().addAll(canvas, buttonContainer);
+
+        // Posizioniamo il contenitore in basso a destra con un po' di margine
+        StackPane.setAlignment(buttonContainer, Pos.BOTTOM_RIGHT);
+        StackPane.setMargin(buttonContainer, new Insets(20));
+    }
+
+    public Button getPauseButton() {
+        return this.pauseButton;
     }
 
     private Button createAddEntityButton() {

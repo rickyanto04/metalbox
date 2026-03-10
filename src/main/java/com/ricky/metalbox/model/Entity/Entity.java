@@ -14,7 +14,15 @@ public interface Entity {
 
     List<Position> getOccupiedPositions();
 
-    void addFriend(Entity friend);
+    void addFriend(Entity e);
 
     Set<Entity> getFriends();
+
+    void setTargetPosition(Position p);
+
+    Position getTargetPosition();
+
+    void setThinkingTicks(int ticks);
+
+    int getThinkingTicks();
 }

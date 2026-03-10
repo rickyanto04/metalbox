@@ -17,8 +17,10 @@ public class Human implements Entity{
         new Position(1, 2)
     );
     private Position anchorPosition;
+    private Position targetPosition;
     private boolean alive = true;
     private Set<Entity> friends = new HashSet<>();
+    private int thinkingTicks = 0;
 
     public Human(final Position birthPosition) {
         this.anchorPosition = birthPosition;
@@ -57,5 +59,25 @@ public class Human implements Entity{
     @Override
     public Set<Entity> getFriends() {
         return Collections.unmodifiableSet(this.friends);
+    }
+
+    @Override
+    public void setTargetPosition(Position p) {
+        this.targetPosition = p;
+    }
+
+    @Override
+    public Position getTargetPosition() {
+        return this.targetPosition;
+    }
+
+    @Override
+    public void setThinkingTicks(int ticks) {
+        this.thinkingTicks = ticks;
+    }
+
+    @Override
+    public int getThinkingTicks() {
+        return this.thinkingTicks;
     }
 }
