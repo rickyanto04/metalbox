@@ -1,6 +1,7 @@
 package com.ricky.metalbox.model.Entity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
@@ -51,5 +52,10 @@ public class Human implements Entity{
     @Override
     public void addFriend(final Entity e) {
         this.friends.add(e);
+    }
+
+    @Override
+    public Set<Entity> getFriends() {
+        return Collections.unmodifiableSet(this.friends);
     }
 }

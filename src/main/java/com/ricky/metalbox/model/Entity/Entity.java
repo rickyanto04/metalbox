@@ -1,6 +1,7 @@
 package com.ricky.metalbox.model.Entity;
 
 import java.util.List;
+import java.util.Set;
 
 import com.ricky.metalbox.model.Utilities.Position;
 
@@ -14,4 +15,6 @@ public interface Entity {
     List<Position> getOccupiedPositions();
 
     void addFriend(Entity friend);
+
+    Set<Entity> getFriends();
 }

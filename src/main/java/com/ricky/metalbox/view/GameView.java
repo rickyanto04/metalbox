@@ -68,6 +68,13 @@ public class GameView extends StackPane{
         // 2. Disegna tutte le entità in nero leggendo le posizioni occupate
         gc.setFill(Color.BLACK);
         for (Entity e : land.getEntities()) {
+
+            if (!e.getFriends().isEmpty()) {
+                gc.setFill(Color.PINK);
+            } else {
+                gc.setFill(Color.BLACK);
+            }
+
             for (Position p : e.getOccupiedPositions()) {
                 // Moltiplichiamo le coordinate del modello per la TILE_SIZE per avere i pixel a schermo
                 gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
