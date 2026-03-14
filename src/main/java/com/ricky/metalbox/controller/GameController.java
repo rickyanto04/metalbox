@@ -90,6 +90,10 @@ public class GameController {
                 int newX = this.random.nextInt(240) + 8;
                 int newY = this.random.nextInt(240) + 8;
                 target = new Position(newX, newY);
+
+                /*
+                qui devo controllare che il target non sia sopra l'ostacolo
+                */
                 entity.setTargetPosition(target);
 
                 //salta la fase di movement in quanto deve pensare prima di partire per la prossima meta

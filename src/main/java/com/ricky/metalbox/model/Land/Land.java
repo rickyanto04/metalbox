@@ -11,4 +11,6 @@ public interface Land {
     boolean moveEntity(Entity e, Position anchor);
 
     List<Entity> getEntities();
+
+    boolean addObstacle(Obstacle o);
 }

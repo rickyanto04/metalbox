@@ -29,7 +29,8 @@ public class GameView extends StackPane{
         this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 
         // Creazione del bottone per aggiungere le entità
-        Button addButton = createAddEntityButton();
+        Button addEntityButton = createAddEntityButton();
+        Button addBoulderButton = createAddObstacleButton();
 
         this.pauseButton = new Button("pause simulation");
         this.pauseButton.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: #ffcccc; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
@@ -37,7 +38,7 @@ public class GameView extends StackPane{
         // Creiamo un contenitore verticale per impilare i due bottoni
         VBox buttonContainer = new VBox(10); // 10 è lo spazio (gap) tra i bottoni
         buttonContainer.setAlignment(Pos.BOTTOM_RIGHT);
-        buttonContainer.getChildren().addAll(pauseButton, addButton);
+        buttonContainer.getChildren().addAll(pauseButton, addEntityButton, addBoulderButton);
 
         // Aggiungiamo Canvas e VBox al layout principale
         this.getChildren().addAll(canvas, buttonContainer);
@@ -52,12 +53,12 @@ public class GameView extends StackPane{
     }
 
     private Button createAddEntityButton() {
-        Button btnAdd = new Button("add human");
+        Button btnAddEntity = new Button("add human");
 
         // Stile CSS integrato per renderlo leggermente trasparente e visivamente gradevole
-        btnAdd.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: white; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+        btnAddEntity.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: white; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
-        btnAdd.setOnAction(event -> {
+        btnAddEntity.setOnAction(event -> {
             Random rand = new Random();
             // Genera coordinate casuali per l'ancora, tenendosi lontano dai bordi
             int startX = rand.nextInt(200) + 20;
@@ -68,7 +69,27 @@ public class GameView extends StackPane{
             land.addEntity(newHuman);
         });
 
-        return btnAdd;
+        return btnAddEntity;
+    }
+
+    private Button createAddObstacleButton() {
+        Button btnAddObstacle = new Button("add boulder");
+
+        // Stile CSS integrato per renderlo leggermente trasparente e visivamente gradevole
+        btnAddObstacle.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: red; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+
+        btnAddObstacle.setOnAction(event -> {
+            Random rand = new Random();
+            // Genera coordinate casuali per l'ancora, tenendosi lontano dai bordi
+            int startX = rand.nextInt(200) + 20;
+            int startY = rand.nextInt(200) + 20;
+
+            // Crea un nuovo ostacolo e prova ad aggiungerlo alla mappa
+            Obstacle newBoulder = new ObstacleImpl(new Position(startX, startY));
+            land.addObstacle(newBoulder);
+        });
+
+        return btnAddObstacle;
     }
 
     // Questo metodo verrà chiamato dal GameController ad ogni "tick"

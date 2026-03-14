@@ -8,11 +8,13 @@ import com.ricky.metalbox.model.Cell.Cell;
 import com.ricky.metalbox.model.Cell.CellImpl;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Utilities.Position;
+import com.ricky.metalbox.model.Obstacle.ObstacleImpl;
 
 public class LandImpl implements Land{
     private static final int landSize = 250;
     private Cell[][] grid = new CellImpl[landSize][landSize];
     private List<Entity> entities = new ArrayList<>();
+    private List<Obstacle> obstacles = new ArrayList<>();
 
     public LandImpl() {
         for (int i = 0; i < landSize; i++) {
@@ -60,13 +62,25 @@ public class LandImpl implements Land{
         return Collections.unmodifiableList(this.entities);
     }
 
+    @Override
+    public boolean addObstacle(final Obstacle o) {
+        for(Position p : o.getOccupiedPositions()) {
+            if (!isPositionValid(p)) {
+                return false;
+            }
+        }
+
+        this.obstacles.add(o);
+        return true;
+    }
+
     //helper 1
-    private boolean isPositionValid(Position p) {
+    private boolean isPositionValid(final Position p) {
         return p.getX() >= 0 && p.getX() < landSize && p.getY() >= 0 && p.getY() < landSize;
     }
 
     //helper 2
-    private void setEntityOccupation(Entity e, boolean value) {
+    private void setEntityOccupation(final Entity e, final boolean value) {
         for(Position p : e.getOccupiedPositions()) {
             this.grid[p.getY()][p.getX()].setOccupied(value);
         }
