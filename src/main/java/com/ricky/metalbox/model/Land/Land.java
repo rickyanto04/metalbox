@@ -16,4 +16,7 @@ public interface Land {
     boolean addObstacle(Obstacle o);
 
     List<Obstacle> getObstacles();
+
+    // per far capire se una cella è dentro i bordi e non occupata
+    boolean isCellFree(Position p);
 }

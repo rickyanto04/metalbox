@@ -27,7 +27,7 @@ public class LandImpl implements Land{
     @Override
     public boolean addEntity(final Entity e) {
         for(Position p : e.getOccupiedPositions()) {
-            if (!isPositionValid(p)) {
+            if (!isCellFree(p)) {
                 return false;
             }
         }
@@ -45,7 +45,7 @@ public class LandImpl implements Land{
 
         e.setAnchorPosition(newAnchorPos); // fisso la nuova anchor
         for(Position p : e.getOccupiedPositions()) { // controllo se la nuova posizione andrebbe bene
-            if (!isPositionValid(p)) {
+            if (!isCellFree(p)) {
                 // se c'è anche solo un ostacolo allora si ritorna a prima e ritorna false
                 e.setAnchorPosition(oldAnchorPos);
                 setEntityOccupation(e, true);
@@ -65,13 +65,24 @@ public class LandImpl implements Land{
     @Override
     public boolean addObstacle(final Obstacle o) {
         for(Position p : o.getOccupiedPositions()) {
-            if (!isPositionValid(p)) {
+            if (!isCellFree(p)) {
                 return false;
             }
         }
 
+        setObstacleOccupation(o, true);
         this.obstacles.add(o);
         return true;
+    }
+
+    @Override
+    public List<Obstacle> getObstacles() {
+        return Collections.unmodifiableList(this.obstacles);
+    }
+
+    //helper 0
+    public boolean isCellFree(final Position p) {
+        return isPositionValid(p) && !this.grid[p.getY()][p.getX()].isOccupied();
     }
 
     //helper 1
@@ -86,9 +97,11 @@ public class LandImpl implements Land{
         }
     }
 
-    @Override
-    public List<Obstacle> getObstacles() {
-        return Collections.unmodifiableList(this.obstacles);
+    //helper 3
+    private void setObstacleOccupation(final Obstacle o, final boolean value) {
+        for(Position p : o.getOccupiedPositions()) {
+            this.grid[p.getY()][p.getX()].setOccupied(value);
+        }
     }
 
 }

@@ -29,7 +29,7 @@ public class ObstacleImpl implements Obstacle{
         for (Position p : this.shape) {
             occupiedPositions.add(new Position(
             this.anchorPosition.getX() + p.getX(),
-            this.anchorPosition.getX() + p.getX()
+            this.anchorPosition.getY() + p.getY()
             ));
         }
         return occupiedPositions;

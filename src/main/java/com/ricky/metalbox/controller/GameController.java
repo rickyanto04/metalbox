@@ -87,14 +87,14 @@ public class GameController {
                     entity.setThinkingTicks(thinkingTime);
                 }
 
-                int newX = this.random.nextInt(240) + 8;
-                int newY = this.random.nextInt(240) + 8;
-                target = new Position(newX, newY);
+                //ciclo che continua a generare coordinate finché non trova una cella libera da ostacoli/entità
+                int newX, newY;
+                do {
+                    newX = this.random.nextInt(240) + 8;
+                    newY = this.random.nextInt(240) + 8;
+                    target = new Position(newX, newY);
+                } while (!this.land.isCellFree(target));
 
-                /*
-                qui devo controllare che il target non sia sopra l'ostacolo
-                LO FARò IN SEGUITO, NON è UN PROBLEMA PER ORA
-                */
                 entity.setTargetPosition(target);
 
                 //salta la fase di movement in quanto deve pensare prima di partire per la prossima meta
