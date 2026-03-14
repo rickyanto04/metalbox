@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Configurazione di JavaFX
+javafx {
+    version = "21"
+    modules = [ 'javafx.controls', 'javafx.graphics' ]
+}
+
+// Definisce la classe principale da avviare
+application {
+    mainClass = 'com.ricky.metalbox.MetalboxApp'
+}
+
+// Forza l'uso di Java 21 (necessario per i metodi come getFirst() e getLast())
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}

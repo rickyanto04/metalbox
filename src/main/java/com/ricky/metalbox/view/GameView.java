@@ -5,6 +5,8 @@ import java.util.Random;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Entity.Human;
 import com.ricky.metalbox.model.Land.Land;
+import com.ricky.metalbox.model.Obstacle.Obstacle;
+import com.ricky.metalbox.model.Obstacle.ObstacleImpl;
 import com.ricky.metalbox.model.Utilities.Position;
 
 import javafx.geometry.Insets;
@@ -100,6 +102,11 @@ public class GameView extends StackPane{
         gc.setFill(Color.LIGHTGREEN);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
+        renderEntities(gc);
+        renderObstacles(gc);
+    }
+
+    private void renderEntities(final GraphicsContext gc) {
         // 2. Disegna tutte le entità in nero leggendo le posizioni occupate
         gc.setFill(Color.BLACK);
         for (Entity e : land.getEntities()) {
@@ -111,6 +118,18 @@ public class GameView extends StackPane{
             }
 
             for (Position p : e.getOccupiedPositions()) {
+                // Moltiplichiamo le coordinate del modello per la TILE_SIZE per avere i pixel a schermo
+                gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            }
+        }
+    }
+
+    private void renderObstacles(final GraphicsContext gc) {
+        gc.setFill(Color.BLUE);
+        for (Obstacle o : land.getObstacles()) {
+            gc.setFill(Color.BLUE);
+
+            for (Position p : o.getOccupiedPositions()) {
                 // Moltiplichiamo le coordinate del modello per la TILE_SIZE per avere i pixel a schermo
                 gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             }

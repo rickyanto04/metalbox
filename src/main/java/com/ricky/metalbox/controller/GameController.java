@@ -93,6 +93,7 @@ public class GameController {
 
                 /*
                 qui devo controllare che il target non sia sopra l'ostacolo
+                LO FARò IN SEGUITO, NON è UN PROBLEMA PER ORA
                 */
                 entity.setTargetPosition(target);
 

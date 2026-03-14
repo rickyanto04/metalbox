@@ -8,7 +8,7 @@ import com.ricky.metalbox.model.Cell.Cell;
 import com.ricky.metalbox.model.Cell.CellImpl;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Utilities.Position;
-import com.ricky.metalbox.model.Obstacle.ObstacleImpl;
+import com.ricky.metalbox.model.Obstacle.Obstacle;
 
 public class LandImpl implements Land{
     private static final int landSize = 250;
@@ -84,6 +84,11 @@ public class LandImpl implements Land{
         for(Position p : e.getOccupiedPositions()) {
             this.grid[p.getY()][p.getX()].setOccupied(value);
         }
+    }
+
+    @Override
+    public List<Obstacle> getObstacles() {
+        return Collections.unmodifiableList(this.obstacles);
     }
 
 }
