@@ -9,4 +9,6 @@ public interface Cell {
     void setOccupied(boolean occupied);
 
     Position getPosition();
+
+    TerrainType getTerrainType();
 }

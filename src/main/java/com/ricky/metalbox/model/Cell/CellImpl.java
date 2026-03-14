@@ -5,10 +5,12 @@ import com.ricky.metalbox.model.Utilities.Position;
 public class CellImpl implements Cell{
 
     private final Position position;
+    private final TerrainType terrainType;
     private boolean occupied;
 
-    public CellImpl(final Position p) {
+    public CellImpl(final Position p, final TerrainType terrainType) {
         this.position = p;
+        this.terrainType = terrainType;
     }
 
     @Override
@@ -24,5 +26,10 @@ public class CellImpl implements Cell{
     @Override
     public Position getPosition() {
         return this.position;
+    }
+
+    @Override
+    public TerrainType getTerrainType() {
+        return this.terrainType;
     }
 }
