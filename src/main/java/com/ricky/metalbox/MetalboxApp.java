@@ -1,6 +1,8 @@
 package com.ricky.metalbox;
 
+import com.ricky.metalbox.controller.FriendshipController;
 import com.ricky.metalbox.controller.GameController;
+import com.ricky.metalbox.controller.MovementController;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Land.LandImpl;
 import com.ricky.metalbox.view.GameView;
@@ -12,15 +14,15 @@ import javafx.stage.Stage;
 public class MetalboxApp extends Application{
     @Override
     public void start(Stage primaryStage) {
-        // 1. Inizializza il Modello
+        // Inizializza il Modello
         Land land = new LandImpl();
 
-        // 2. Inizializza la Vista passando il Modello
+        // Inizializza la Vista passando il Modello
         GameView view = new GameView(land);
 
-        // 3. Inizializza il Controller passando il Modello e il metodo di render della Vista
-        // Usiamo la sintassi view::renderMap per passare il riferimento al metodo
-        GameController controller = new GameController(land, view::renderMap);
+        MovementController movementController = new MovementController(land);
+        FriendshipController friendshipController = new FriendshipController(land);
+        GameController controller = new GameController(movementController, friendshipController, view::renderMap);
 
         view.getPauseButton().setOnAction(event -> {
             controller.togglePause(); // Mette in pausa o riavvia
@@ -35,7 +37,7 @@ public class MetalboxApp extends Application{
             }
         });
 
-        // 4. Configurazione della finestra principale
+        // Configurazione della finestra principale
         Scene scene = new Scene(view); // La root della Scene è direttamente la nostra GameView (che è uno StackPane)
 
         primaryStage.setTitle("MetalBox - Testing");
@@ -43,7 +45,7 @@ public class MetalboxApp extends Application{
         primaryStage.setResizable(false);
         primaryStage.show();
 
-        // 5. Facciamo un primo render a schermo statico e avviamo il loop del gioco
+        // Facciamo un primo render a schermo statico e avviamo il loop del gioco
         view.renderMap();
         controller.start();
     }
