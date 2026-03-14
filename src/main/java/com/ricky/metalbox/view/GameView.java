@@ -6,7 +6,7 @@ import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Entity.Human;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Obstacle.Obstacle;
-import com.ricky.metalbox.model.Obstacle.ObstacleImpl;
+import com.ricky.metalbox.model.Obstacle.Rock;
 import com.ricky.metalbox.model.Utilities.Position;
 
 import javafx.geometry.Insets;
@@ -87,7 +87,7 @@ public class GameView extends StackPane{
             int startY = rand.nextInt(200) + 20;
 
             // Crea un nuovo ostacolo e prova ad aggiungerlo alla mappa
-            Obstacle newBoulder = new ObstacleImpl(new Position(startX, startY));
+            Obstacle newBoulder = new Rock(new Position(startX, startY));
             land.addObstacle(newBoulder);
         });
 
