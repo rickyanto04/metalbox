@@ -64,11 +64,12 @@ public class InputController {
             // isSelected() ritorna true se il bottone è "schiacciato", false se rilasciato
             this.isBuildingRock = this.view.getAddRockButton().isSelected();
 
+            // interruttore per il panning
+            this.view.getScrollPane().setPannable(!this.isBuildingRock);
+
             if (this.isBuildingRock) {
-                // Stile del bottone attivo (Giallo/Arancio per far capire che stiamo costruendo)
                 this.view.getAddRockButton().setStyle("-fx-opacity: 1.0; -fx-padding: 10px 20px; -fx-cursor: crosshair; -fx-background-color: #ffdd99; -fx-border-color: black; -fx-border-width: 2px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
             } else {
-                // Stile normale disattivato
                 this.view.getAddRockButton().setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: lightgray; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
             }
         });

@@ -17,15 +17,18 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.VBox;
+import javafx.scene.transform.Scale;
 
 public class GameView extends StackPane {
 
     // public, così l'InputController può usarle per calcolare le coordinate del mouse
     public static final int TILE_SIZE = 3;
-    public static final int MAP_SIZE = 500;
+    public static final int MAP_SIZE = 250;
 
     private final Land land;
     private final Canvas canvas;
+
+    private final ScrollPane scrollPane;
 
     // bottoni come variabili di classe
     private final Button pauseButton;
@@ -36,13 +39,21 @@ public class GameView extends StackPane {
         this.land = land;
         this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 
+        //trasformatore ancorato a 0,0
+        Scale scaleTransform = new Scale(1, 1, 0, 0);
+        this.canvas.getTransforms().add(scaleTransform);
+
         // canvas nel group per consentire lo zoom
         Group canvasGroup = new Group(this.canvas);
 
         // aggiunta del group nello scrollpane navigabile
-        ScrollPane scrollPane = new ScrollPane(canvasGroup);
-        scrollPane.setStyle("-fx-background-color: transparent;");
-        scrollPane.setPannable(false); // false per non interferire col disegno
+        this.scrollPane = new ScrollPane(canvasGroup);
+
+        // oceano esterno
+        scrollPane.setStyle("-fx-background: #0F5E9C; -fx-background-color: #0F5E9C;");
+
+        // panning sempre attivo senza strumenti selezionati
+        scrollPane.setPannable(true);
 
         // logica di Zoom (CTRL + rotellina mouse)
         scrollPane.setOnScroll(event -> {
@@ -51,10 +62,17 @@ public class GameView extends StackPane {
 
                 //calcolo del fattore di zoom
                 double zoomFactor = event.getDeltaY() > 0 ? 1.1 : 0.9;
+                double newScale = scaleTransform.getX() * zoomFactor;
+
+                // limiti dello zoom usando lo scale invece che i pixel
+                double MIN_SCALE = 0.5;
+                double MAX_SCALE = 10.0;
+
+                newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
 
                 //applichiamo il factor al group
-                canvasGroup.setScaleX(canvasGroup.getScaleX() * zoomFactor);
-                canvasGroup.setScaleY(canvasGroup.getScaleY() * zoomFactor);
+                canvasGroup.setScaleX(newScale);
+                canvasGroup.setScaleY(newScale);
             }
         });
 
@@ -72,6 +90,8 @@ public class GameView extends StackPane {
         buttonContainer.getChildren().addAll(pauseButton, addHumanButton, addRockButton);
         buttonContainer.setPickOnBounds(false);
 
+        // sfondo stackpane base
+        this.setStyle("-fx-background-color: #0F5E9C;");
         this.getChildren().addAll(scrollPane, buttonContainer);
 
         StackPane.setAlignment(buttonContainer, Pos.BOTTOM_RIGHT);
@@ -80,6 +100,7 @@ public class GameView extends StackPane {
 
     // ---> NUOVI GETTER: Espongono i componenti per fargli agganciare gli eventi dal Controller
     public Canvas getCanvas() { return this.canvas; }
+    public ScrollPane getScrollPane() { return this.scrollPane; }
     public Button getPauseButton() { return this.pauseButton; }
     public Button getAddHumanButton() { return this.addHumanButton; }
     public ToggleButton getAddRockButton() { return this.addRockButton; }
