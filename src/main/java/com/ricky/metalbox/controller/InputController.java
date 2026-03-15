@@ -69,15 +69,21 @@ public class InputController {
 
             if (this.isBuildingRock) {
                 this.view.getAddRockButton().setStyle("-fx-opacity: 1.0; -fx-padding: 10px 20px; -fx-cursor: crosshair; -fx-background-color: #ffdd99; -fx-border-color: black; -fx-border-width: 2px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+                this.view.getCanvas().setCursor(javafx.scene.Cursor.CROSSHAIR);
             } else {
                 this.view.getAddRockButton().setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: lightgray; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+                this.view.getCanvas().setCursor(javafx.scene.Cursor.DEFAULT);
             }
         });
 
-        // Usiamo due eventi: MousePressed (click singolo) e MouseDragged (click tenuto premuto in scorrimento)
-        this.view.getCanvas().setOnMousePressed(this::handleMapClickOrDrag);
-        this.view.getCanvas().setOnMouseDragged(this::handleMapClickOrDrag);
-        this.view.getCanvas().setOnMouseReleased(this::handleMapClickOrDrag);
+        this.view.getCanvas().addEventHandler(MouseEvent.ANY, event -> {
+        if (!isBuildingRock) {
+            // Se NON stiamo costruendo, lasciamo che l'evento "passi oltre" verso lo ScrollPane
+            return;
+        }
+        handleMapClickOrDrag(event);
+        event.consume(); // Consumiamo l'evento così non attiva il panning durante la costruzione
+    });
     }
 
     private void handleMapClickOrDrag(MouseEvent event) {

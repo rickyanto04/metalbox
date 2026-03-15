@@ -17,7 +17,6 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.VBox;
-import javafx.scene.transform.Scale;
 
 public class GameView extends StackPane {
 
@@ -39,21 +38,20 @@ public class GameView extends StackPane {
         this.land = land;
         this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 
-        //trasformatore ancorato a 0,0
-        Scale scaleTransform = new Scale(1, 1, 0, 0);
-        this.canvas.getTransforms().add(scaleTransform);
-
         // canvas nel group per consentire lo zoom
         Group canvasGroup = new Group(this.canvas);
 
+        StackPane zoomContainer = new StackPane(canvasGroup);
+        zoomContainer.setAlignment(Pos.CENTER);
+
         // aggiunta del group nello scrollpane navigabile
-        this.scrollPane = new ScrollPane(canvasGroup);
+        this.scrollPane = new ScrollPane(zoomContainer);
+        scrollPane.setPannable(true);
+        scrollPane.setFitToHeight(false);
+        scrollPane.setFitToWidth(false);
 
         // oceano esterno
-        scrollPane.setStyle("-fx-background: #0F5E9C; -fx-background-color: #0F5E9C;");
-
-        // panning sempre attivo senza strumenti selezionati
-        scrollPane.setPannable(true);
+        scrollPane.setStyle("-fx-background: #0F5E9C; -fx-background-color: #0F5E9C; -fx-border-color: transparent;");
 
         // logica di Zoom (CTRL + rotellina mouse)
         scrollPane.setOnScroll(event -> {
@@ -62,15 +60,9 @@ public class GameView extends StackPane {
 
                 //calcolo del fattore di zoom
                 double zoomFactor = event.getDeltaY() > 0 ? 1.1 : 0.9;
-                double newScale = scaleTransform.getX() * zoomFactor;
+                double currentScale = canvasGroup.getScaleX();
+                double newScale = Math.max(0.5, Math.min(10.0, currentScale * zoomFactor));
 
-                // limiti dello zoom usando lo scale invece che i pixel
-                double MIN_SCALE = 0.5;
-                double MAX_SCALE = 10.0;
-
-                newScale = Math.max(MIN_SCALE, Math.min(newScale, MAX_SCALE));
-
-                //applichiamo il factor al group
                 canvasGroup.setScaleX(newScale);
                 canvasGroup.setScaleY(newScale);
             }
