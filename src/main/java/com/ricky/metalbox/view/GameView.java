@@ -38,33 +38,38 @@ public class GameView extends StackPane {
         this.land = land;
         this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 
-        // canvas nel group per consentire lo zoom
-        Group canvasGroup = new Group(this.canvas);
+        javafx.scene.transform.Scale scaleTransform = new javafx.scene.transform.Scale(1, 1, 0, 0);
+        this.canvas.getTransforms().add(scaleTransform);
 
-        StackPane zoomContainer = new StackPane(canvasGroup);
-        zoomContainer.setAlignment(Pos.CENTER);
+        Group scrollContent = new Group(this.canvas);
 
-        // aggiunta del group nello scrollpane navigabile
-        this.scrollPane = new ScrollPane(zoomContainer);
+        // centraggio del dezoom, stackpane intermedio
+        StackPane centerPane = new StackPane(scrollContent);
+        centerPane.setAlignment(Pos.CENTER);
+        centerPane.setStyle("-fx-background-color: #0F5E9C;");
+
+        // Inseriamo il Group DIRETTAMENTE nello ScrollPane
+        this.scrollPane = new ScrollPane(centerPane);
+
         scrollPane.setPannable(true);
-        scrollPane.setFitToHeight(false);
-        scrollPane.setFitToWidth(false);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
 
         // oceano esterno
         scrollPane.setStyle("-fx-background: #0F5E9C; -fx-background-color: #0F5E9C; -fx-border-color: transparent;");
 
-        // logica di Zoom (CTRL + rotellina mouse)
-        scrollPane.setOnScroll(event -> {
-            if (event.isControlDown()) { // zoom solo con CTRL premuto
-                event.consume(); // blocco dello scorrimento standard della pagina
+        // logica di Zoom (CTRL + rotellina mouse) + eventfilter per zoom intermittente
+        this.scrollPane.addEventFilter(javafx.scene.input.ScrollEvent.SCROLL, event -> {
+            if (event.isControlDown()) {
+                event.consume(); // Fermiamo lo scroll nativo della pagina
 
-                //calcolo del fattore di zoom
+                // Calcolo fluido e reattivo ogni singola volta che la rotellina gira
                 double zoomFactor = event.getDeltaY() > 0 ? 1.1 : 0.9;
-                double currentScale = canvasGroup.getScaleX();
+                double currentScale = scaleTransform.getX();
                 double newScale = Math.max(0.5, Math.min(10.0, currentScale * zoomFactor));
 
-                canvasGroup.setScaleX(newScale);
-                canvasGroup.setScaleY(newScale);
+                scaleTransform.setX(newScale);
+                scaleTransform.setY(newScale);
             }
         });
 
