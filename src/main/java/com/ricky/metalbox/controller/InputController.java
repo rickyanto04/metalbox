@@ -17,8 +17,11 @@ public class InputController {
     private final GameController gameController;
     private final Random random;
 
-    // ---> Variabile di stato che ricorda se siamo in modalità "Costruzione Muro"
+    // variabile di stato che ricorda se siamo in modalità "Costruzione Muro"
     private boolean isBuildingRock = false;
+
+    // variabile che mantiene l'ultima posizione del mouse trascinato
+    private Position lastDragPos = null;
 
     public InputController(final Land land, final GameView view, final GameController gameController) {
         this.land = land;
@@ -30,7 +33,7 @@ public class InputController {
     }
 
     private void setupEventHandlers() {
-        // 1. GESTIONE BOTTONE UMANO (Generazione Casuale)
+        // GESTIONE BOTTONE UMANO (Generazione Casuale)
         this.view.getAddHumanButton().setOnAction(event -> {
             int startX, startY;
             Position spawnPos;
@@ -43,7 +46,7 @@ public class InputController {
             land.addEntity(new Human(spawnPos));
         });
 
-        // 2. GESTIONE BOTTONE PAUSA
+        // GESTIONE BOTTONE PAUSA
         this.view.getPauseButton().setOnAction(event -> {
             this.gameController.togglePause();
 
@@ -56,7 +59,7 @@ public class InputController {
             }
         });
 
-        // 3. GESTIONE MODALITÀ COSTRUZIONE ROCCIA (Toggle)
+        // GESTIONE MODALITÀ COSTRUZIONE ROCCIA (Toggle)
         this.view.getAddRockButton().setOnAction(event -> {
             // isSelected() ritorna true se il bottone è "schiacciato", false se rilasciato
             this.isBuildingRock = this.view.getAddRockButton().isSelected();
@@ -70,40 +73,98 @@ public class InputController {
             }
         });
 
-        // ---> 4. LA MAGIA DEL MOUSE SULLA MAPPA
         // Usiamo due eventi: MousePressed (click singolo) e MouseDragged (click tenuto premuto in scorrimento)
         this.view.getCanvas().setOnMousePressed(this::handleMapClickOrDrag);
         this.view.getCanvas().setOnMouseDragged(this::handleMapClickOrDrag);
+        this.view.getCanvas().setOnMouseReleased(this::handleMapClickOrDrag);
     }
 
     private void handleMapClickOrDrag(MouseEvent event) {
         // Se non abbiamo schiacciato il bottone "build rock", ignoriamo i click sulla mappa
         if (!isBuildingRock) return;
 
+        // assicuriamoci che si stia usando il tasto sx del mouse
+        if (!event.isPrimaryButtonDown() && event.getEventType() != MouseEvent.MOUSE_PRESSED) return;
+
         // Convertiamo i Pixel del mouse in coordinate della Griglia
         int gridX = (int) (event.getX() / GameView.TILE_SIZE);
         int gridY = (int) (event.getY() / GameView.TILE_SIZE);
-        Position clickPos = new Position(gridX, gridY);
+        Position currentPos = new Position(gridX, gridY);
 
-        // Prepariamo la roccia fittizia per controllare il suo spazio occupato (2x2)
-        Rock proposedRock = new Rock(clickPos);
+        boolean redrawNeeded = false;
 
-        // Controlliamo che tutte le celle che la roccia andrà a occupare siano effettivamente libere
+        // LOGICA DI DISEGNO CONTINUO
+        if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
+            lastDragPos = currentPos;
+            redrawNeeded = tryPlaceRock(currentPos);
+
+        } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
+            if (lastDragPos != null) {
+                // Richiama l'algoritmo che disegna i blocchi mancanti tra il frame precedente e questo
+                redrawNeeded = drawLineOfRocks(lastDragPos, currentPos);
+            }
+            lastDragPos = currentPos;
+
+        } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
+            lastDragPos = null; // Fine della linea
+        }
+
+        // OTTIMIZZAZIONE, ridisegniamo la mappa solo UNA VOLTA alla fine del calcolo, non per ogni singola roccia!
+        if (redrawNeeded) {
+            this.view.renderMap();
+        }
+    }
+
+    /*
+    Algoritmo di Bresenham per interpolazione della linea
+    */
+    private boolean drawLineOfRocks(Position start, Position end) {
+        boolean anyRockPlaced = false;
+        int x0 = start.getX();
+        int y0 = start.getY();
+        int x1 = end.getX();
+        int y1 = end.getY();
+
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+
+        while (true) {
+            boolean placed = tryPlaceRock(new Position(x0, y0));
+            if (placed) anyRockPlaced = true;
+
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x0 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y0 += sy;
+            }
+        }
+        return anyRockPlaced;
+    }
+
+    // restituisce true con roccia piazzata e non chiama rendermap internamente
+    private boolean tryPlaceRock(Position p) {
+        Rock proposedRock = new Rock(p);
+
         boolean canPlace = true;
-        for (Position p : proposedRock.getOccupiedPositions()) {
-            if (!land.isCellFree(p)) {
+        for (Position occupied : proposedRock.getOccupiedPositions()) {
+            if (!land.isCellFree(occupied)) {
                 canPlace = false;
-                break; // Basta una cella occupata per bloccare il piazzamento
+                break;
             }
         }
 
-        // Se lo spazio è interamente libero (niente acqua, niente umani, niente altre rocce), piazzo il muro!
         if (canPlace) {
             land.addObstacle(proposedRock);
-
-            // Richiediamo un aggiornamento visivo immediato alla View
-            // (altrimenti il muro comparirebbe a scatti aspettando il frame successivo)
-            this.view.renderMap();
+            return true;
         }
+        return false;
     }
 }

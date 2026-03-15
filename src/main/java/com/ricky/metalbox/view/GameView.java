@@ -8,9 +8,11 @@ import com.ricky.metalbox.model.Utilities.Position;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -18,24 +20,43 @@ import javafx.scene.layout.VBox;
 
 public class GameView extends StackPane {
 
-    // ---> MODIFICA: Ora sono public, così l'InputController può usarle per calcolare le coordinate del mouse
+    // public, così l'InputController può usarle per calcolare le coordinate del mouse
     public static final int TILE_SIZE = 3;
-    public static final int MAP_SIZE = 250;
+    public static final int MAP_SIZE = 500;
 
     private final Land land;
     private final Canvas canvas;
 
-    // ---> MODIFICA: Spostati i bottoni come variabili di classe
+    // bottoni come variabili di classe
     private final Button pauseButton;
     private final Button addHumanButton;
-    private final ToggleButton addRockButton; // Questo ora è un ToggleButton!
+    private final ToggleButton addRockButton;
 
     public GameView(Land land) {
         this.land = land;
         this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 
-        // ---> MODIFICA: I bottoni ora vengono solo creati e stilizzati.
-        // TUTTA la logica (setOnAction) è stata eliminata da qui e spostata nell'InputController.
+        // canvas nel group per consentire lo zoom
+        Group canvasGroup = new Group(this.canvas);
+
+        // aggiunta del group nello scrollpane navigabile
+        ScrollPane scrollPane = new ScrollPane(canvasGroup);
+        scrollPane.setStyle("-fx-background-color: transparent;");
+        scrollPane.setPannable(false); // false per non interferire col disegno
+
+        // logica di Zoom (CTRL + rotellina mouse)
+        scrollPane.setOnScroll(event -> {
+            if (event.isControlDown()) { // zoom solo con CTRL premuto
+                event.consume(); // blocco dello scorrimento standard della pagina
+
+                //calcolo del fattore di zoom
+                double zoomFactor = event.getDeltaY() > 0 ? 1.1 : 0.9;
+
+                //applichiamo il factor al group
+                canvasGroup.setScaleX(canvasGroup.getScaleX() * zoomFactor);
+                canvasGroup.setScaleY(canvasGroup.getScaleY() * zoomFactor);
+            }
+        });
 
         this.pauseButton = new Button("pause simulation");
         this.pauseButton.setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: #ffcccc; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
@@ -49,8 +70,9 @@ public class GameView extends StackPane {
         VBox buttonContainer = new VBox(10);
         buttonContainer.setAlignment(Pos.BOTTOM_RIGHT);
         buttonContainer.getChildren().addAll(pauseButton, addHumanButton, addRockButton);
+        buttonContainer.setPickOnBounds(false);
 
-        this.getChildren().addAll(canvas, buttonContainer);
+        this.getChildren().addAll(scrollPane, buttonContainer);
 
         StackPane.setAlignment(buttonContainer, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(buttonContainer, new Insets(20));
