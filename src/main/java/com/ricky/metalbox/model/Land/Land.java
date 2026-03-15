@@ -2,6 +2,7 @@ package com.ricky.metalbox.model.Land;
 
 import java.util.List;
 
+import com.ricky.metalbox.model.Cell.TerrainType;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Obstacle.Obstacle;
 import com.ricky.metalbox.model.Utilities.Position;
@@ -19,4 +20,8 @@ public interface Land {
 
     // per far capire se una cella è dentro i bordi e non occupata
     boolean isCellFree(Position p);
+
+    int getSize();
+
+    TerrainType getTerrainAt(Position p);
 }

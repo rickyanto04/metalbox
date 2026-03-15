@@ -2,6 +2,7 @@ package com.ricky.metalbox.view;
 
 import java.util.Random;
 
+import com.ricky.metalbox.model.Cell.TerrainType;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Entity.Human;
 import com.ricky.metalbox.model.Land.Land;
@@ -18,9 +19,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.VBox;
 
-public class GameView extends StackPane{
-    private static final int TILE_SIZE = 3; // Dimensione in pixel di ogni cella
-    private static final int MAP_SIZE = 250; // In base alla grandezza definita nel tuo LandImpl
+public class GameView extends StackPane {
+    private static final int TILE_SIZE = 3;
+    private static final int MAP_SIZE = 250;
 
     private final Land land;
     private final Canvas canvas;
@@ -30,22 +31,18 @@ public class GameView extends StackPane{
         this.land = land;
         this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
 
-        // Creazione del bottone per aggiungere le entità
-        Button addEntityButton = createAddEntityButton();
-        Button addBoulderButton = createAddObstacleButton();
+        Button addButton = createAddEntityButton();
+        Button addRockButton = createAddObstacleButton();
 
         this.pauseButton = new Button("pause simulation");
         this.pauseButton.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: #ffcccc; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
-        // Creiamo un contenitore verticale per impilare i due bottoni
-        VBox buttonContainer = new VBox(10); // 10 è lo spazio (gap) tra i bottoni
+        VBox buttonContainer = new VBox(10);
         buttonContainer.setAlignment(Pos.BOTTOM_RIGHT);
-        buttonContainer.getChildren().addAll(pauseButton, addEntityButton, addBoulderButton);
+        buttonContainer.getChildren().addAll(pauseButton, addButton, addRockButton);
 
-        // Aggiungiamo Canvas e VBox al layout principale
         this.getChildren().addAll(canvas, buttonContainer);
 
-        // Posizioniamo il contenitore in basso a destra con un po' di margine
         StackPane.setAlignment(buttonContainer, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(buttonContainer, new Insets(20));
     }
@@ -55,62 +52,81 @@ public class GameView extends StackPane{
     }
 
     private Button createAddEntityButton() {
-        Button btnAddEntity = new Button("add human");
+        Button btnAdd = new Button("add human");
+        btnAdd.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: white; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
-        // Stile CSS integrato per renderlo leggermente trasparente e visivamente gradevole
-        btnAddEntity.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: white; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
-
-        btnAddEntity.setOnAction(event -> {
+        btnAdd.setOnAction(event -> {
             Random rand = new Random();
-            // Genera coordinate casuali per l'ancora, tenendosi lontano dai bordi
-            int startX = rand.nextInt(200) + 20;
-            int startY = rand.nextInt(200) + 20;
+            int startX, startY;
+            Position spawnPos;
 
-            // Crea un nuovo umano e prova ad aggiungerlo alla mappa
-            Human newHuman = new Human(new Position(startX, startY));
-            land.addEntity(newHuman);
+            // Ciclo finché non trova una cella libera (ora non spawnerà nell'acqua!)
+            do {
+                startX = rand.nextInt(200) + 20;
+                startY = rand.nextInt(200) + 20;
+                spawnPos = new Position(startX, startY);
+            } while (!land.isCellFree(spawnPos));
+
+            land.addEntity(new Human(spawnPos));
         });
 
-        return btnAddEntity;
+        return btnAdd;
     }
 
     private Button createAddObstacleButton() {
-        Button btnAddObstacle = new Button("add boulder");
+        Button btnAdd = new Button("add rock");
+        btnAdd.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: lightgray; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
-        // Stile CSS integrato per renderlo leggermente trasparente e visivamente gradevole
-        btnAddObstacle.setStyle("-fx-opacity: 0.7; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: red; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
-
-        btnAddObstacle.setOnAction(event -> {
+        btnAdd.setOnAction(event -> {
             Random rand = new Random();
-            // Genera coordinate casuali per l'ancora, tenendosi lontano dai bordi
-            int startX = rand.nextInt(200) + 20;
-            int startY = rand.nextInt(200) + 20;
+            int startX, startY;
+            Position spawnPos;
 
-            // Crea un nuovo ostacolo e prova ad aggiungerlo alla mappa
-            Obstacle newBoulder = new Rock(new Position(startX, startY));
-            land.addObstacle(newBoulder);
+            do {
+                startX = rand.nextInt(200) + 20;
+                startY = rand.nextInt(200) + 20;
+                spawnPos = new Position(startX, startY);
+            } while (!land.isCellFree(spawnPos));
+
+            land.addObstacle(new Rock(spawnPos));
         });
 
-        return btnAddObstacle;
+        return btnAdd;
     }
 
     // Questo metodo verrà chiamato dal GameController ad ogni "tick"
     public void renderMap() {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
-        // 1. Sfondo verde per rappresentare la pianura
-        gc.setFill(Color.LIGHTGREEN);
-        gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        // 1. DISEGNA I BIOMI DELLA MAPPA (Pixel per Pixel in base al TerrainType)
+        for (int y = 0; y < land.getSize(); y++) {
+            for (int x = 0; x < land.getSize(); x++) {
+                TerrainType type = land.getTerrainAt(new Position(x, y));
 
-        renderEntities(gc);
-        renderObstacles(gc);
-    }
+                // Seleziona il colore giusto!
+                switch (type) {
+                    case WATER: gc.setFill(Color.CORNFLOWERBLUE); break;
+                    case SAND: gc.setFill(Color.NAVAJOWHITE); break;
+                    case MOUNTAIN: gc.setFill(Color.SLATEGRAY); break;
+                    case GRASS:
+                    default: gc.setFill(Color.LIGHTGREEN); break;
+                }
 
-    private void renderEntities(final GraphicsContext gc) {
-        // 2. Disegna tutte le entità in nero leggendo le posizioni occupate
-        gc.setFill(Color.BLACK);
+                // Disegna la cella
+                gc.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            }
+        }
+
+        // ---> 2. DISEGNA GLI OSTACOLI (Rocce grigie)
+        gc.setFill(Color.DARKSLATEGRAY);
+        for (Obstacle o : land.getObstacles()) {
+            for (Position p : o.getOccupiedPositions()) {
+                gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            }
+        }
+
+        // 3. DISEGNA LE ENTITA' (Umani Neri o Rosa)
         for (Entity e : land.getEntities()) {
-
             if (!e.getFriends().isEmpty()) {
                 gc.setFill(Color.PINK);
             } else {
@@ -118,22 +134,8 @@ public class GameView extends StackPane{
             }
 
             for (Position p : e.getOccupiedPositions()) {
-                // Moltiplichiamo le coordinate del modello per la TILE_SIZE per avere i pixel a schermo
                 gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             }
         }
     }
-
-    private void renderObstacles(final GraphicsContext gc) {
-        gc.setFill(Color.BLUE);
-        for (Obstacle o : land.getObstacles()) {
-            gc.setFill(Color.BLUE);
-
-            for (Position p : o.getOccupiedPositions()) {
-                // Moltiplichiamo le coordinate del modello per la TILE_SIZE per avere i pixel a schermo
-                gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            }
-        }
-    }
-
 }
