@@ -3,7 +3,7 @@ package com.ricky.metalbox.view;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Obstacle.Obstacle;
-import com.ricky.metalbox.model.Cell.TerrainType;
+import com.ricky.metalbox.model.Terrain.TerrainType;
 import com.ricky.metalbox.model.Utilities.Position;
 
 import javafx.geometry.Insets;
@@ -105,37 +105,40 @@ public class GameView extends StackPane {
 
     // Questo metodo (il rendering) rimane invariato, perché è il vero e unico scopo della View!
     public void renderMap() {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
+        // blocco della mappa durante il disegno per evitare crash se le entità si muovono nel frattempo
+        synchronized (this.land) {
+            GraphicsContext gc = canvas.getGraphicsContext2D();
 
-        for (int y = 0; y < land.getSize(); y++) {
-            for (int x = 0; x < land.getSize(); x++) {
-                TerrainType type = land.getTerrainAt(new Position(x, y));
-                switch (type) {
-                    case WATER: gc.setFill(Color.CORNFLOWERBLUE); break;
-                    case SAND: gc.setFill(Color.NAVAJOWHITE); break;
-                    case MOUNTAIN: gc.setFill(Color.SLATEGRAY); break;
-                    case GRASS:
-                    default: gc.setFill(Color.LIGHTGREEN); break;
+            for (int y = 0; y < land.getSize(); y++) {
+                for (int x = 0; x < land.getSize(); x++) {
+                    TerrainType type = land.getTerrainAt(new Position(x, y));
+                    switch (type) {
+                        case WATER: gc.setFill(Color.CORNFLOWERBLUE); break;
+                        case SAND: gc.setFill(Color.NAVAJOWHITE); break;
+                        case MOUNTAIN: gc.setFill(Color.SLATEGRAY); break;
+                        case GRASS:
+                        default: gc.setFill(Color.LIGHTGREEN); break;
+                    }
+                    gc.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
-                gc.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             }
-        }
 
-        gc.setFill(Color.DARKSLATEGRAY);
-        for (Obstacle o : land.getObstacles()) {
-            for (Position p : o.getOccupiedPositions()) {
-                gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            gc.setFill(Color.DARKSLATEGRAY);
+            for (Obstacle o : land.getObstacles()) {
+                for (Position p : o.getOccupiedPositions()) {
+                    gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
             }
-        }
 
-        for (Entity e : land.getEntities()) {
-            if (!e.getFriends().isEmpty()) {
-                gc.setFill(Color.PINK);
-            } else {
-                gc.setFill(Color.BLACK);
-            }
-            for (Position p : e.getOccupiedPositions()) {
-                gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            for (Entity e : land.getEntities()) {
+                if (!e.getFriends().isEmpty()) {
+                    gc.setFill(Color.PINK);
+                } else {
+                    gc.setFill(Color.BLACK);
+                }
+                for (Position p : e.getOccupiedPositions()) {
+                    gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
             }
         }
     }

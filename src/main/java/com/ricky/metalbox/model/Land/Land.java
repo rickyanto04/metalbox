@@ -2,9 +2,9 @@ package com.ricky.metalbox.model.Land;
 
 import java.util.List;
 
-import com.ricky.metalbox.model.Cell.TerrainType;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Obstacle.Obstacle;
+import com.ricky.metalbox.model.Terrain.TerrainType;
 import com.ricky.metalbox.model.Utilities.Position;
 
 public interface Land {

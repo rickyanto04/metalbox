@@ -1,4 +1,4 @@
-package com.ricky.metalbox.model.Cell;
+package com.ricky.metalbox.model.Terrain;
 
 public enum TerrainType {
     GRASS,      // new Color(207, 255, 111)

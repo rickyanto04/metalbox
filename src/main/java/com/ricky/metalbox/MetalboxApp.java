@@ -27,7 +27,7 @@ public class MetalboxApp extends Application{
         FriendshipController friendshipController = new FriendshipController(land);
 
         // 4. Inizializza il Controller Principale
-        GameController gameController = new GameController(movementController, friendshipController, view::renderMap);
+        GameController gameController = new GameController(land, movementController, friendshipController, view::renderMap);
 
         // ---> 5. NUOVO: Inizializza l'Input Controller (che aggancerà in automatico i bottoni passati dalla View)
         // NOTA: il codice che era qui per il bottone pausa è stato spostato nell'InputController!

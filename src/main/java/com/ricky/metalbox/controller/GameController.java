@@ -1,41 +1,66 @@
 package com.ricky.metalbox.controller;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.util.Duration;
-import javafx.animation.Animation;
+import com.ricky.metalbox.model.Land.Land;
 
-public class GameController {
+import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 
+public class GameController implements Runnable{
+
+    private final Land land; // synchronization "lock"
     private final Runnable viewRepaintCallback;
-    private final Timeline gameLoop;
-
-    //solita dependency injection
     private final MovementController movementController;
     private final FriendshipController friendshipController;
 
-    //non prende più la Land direttamente, ma i due controller specializzati
-    public GameController(final MovementController movementController, final FriendshipController friendshipController, final Runnable viewRepaintCallback) {
+    //thread di simulazione
+    private Thread logicThread;
+    private AnimationTimer renderTimer;
+
+    private volatile boolean running = false;
+    private volatile boolean paused = false;
+
+    // definizione della velocità della logica: 30 ticks al secondo(1 tick/~33ms)
+    // questo è il simulation tick indipendente
+    private static final double TICK_RATE = 30.0;
+
+    public GameController(final Land land, final MovementController movementController, final FriendshipController friendshipController, final Runnable viewRepaintCallback) {
+        this.land = land;
         this.movementController = movementController;
         this.friendshipController = friendshipController;
         this.viewRepaintCallback = viewRepaintCallback;
 
-        // ogni tick/frame dura 0,2 secondi quindi 1 secondo equivale a 5 tick
-        KeyFrame kFrame = new KeyFrame(Duration.millis(200), e -> gameTick());
-        this.gameLoop = new Timeline(kFrame);
-        this.gameLoop.setCycleCount(Timeline.INDEFINITE);
+        this.renderTimer = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (running) {
+                    viewRepaintCallback.run();
+                }
+            }
+        };
     }
 
     public void start() {
-        this.gameLoop.play();
+        if (this.logicThread == null || !this.running) {
+            this.running = true;
+            this.paused = false;
+
+            //thread dedicato solo alla logica del gioco, background
+            this.logicThread = new Thread(this, "MetalBox-LogicThread");
+            this.logicThread.setDaemon(true); //termina il thread quando l'app viene chiusa
+            this.logicThread.start();
+
+            this.renderTimer.start();
+        } else if (this.paused) {
+            this.paused = false; // ripresa dopo la pausa
+        }
     }
 
     public void pause() {
-        this.gameLoop.pause();
+        this.paused = true;
     }
 
     public boolean isRunning() {
-        return this.gameLoop.getStatus() == Animation.Status.RUNNING;
+        return this.running && !this.paused;
     }
 
     public void togglePause() {
@@ -46,13 +71,47 @@ public class GameController {
         }
     }
 
-    private void gameTick() {
-        // DELEGHIAMO LA LOGICA AI RISPETTIVI CONTROLLER
-        this.movementController.updateMovements();
-        this.friendshipController.updateFriendships();
+    // Algoritmo "Fixed Timestep"
+    @Override
+    public void run() {
+        double timePerTick = 1_000_000_000.0 / TICK_RATE; //durata di un tick in nanosecondi
+        long lastTime = System.nanoTime();
+        double delta = 0;
 
-        if (this.viewRepaintCallback != null) {
-            this.viewRepaintCallback.run(); // ridisegna!!
+        while (running) {
+            long now = System.nanoTime();
+
+            if (paused) {
+                lastTime = now;
+                try { Thread.sleep(10); } catch (final InterruptedException e) { e.printStackTrace(); }
+                continue;
+            }
+
+            //calcolo di quanto tempo è passato dall'ultimo ciclo
+            delta += (now - lastTime) / timePerTick;
+            lastTime = now;
+
+            boolean shouldRender = false;
+
+            // se delta >= 1 significa che è passato abbastanza tempo per eseguire uno o più tick
+            while (delta >= 1) {
+                tickLogic(); //eseguiamo la logica
+                delta--;
+            }
+
+            // riposo per impedire il consumo del 100% della cpu da parte del while
+            try {
+                Thread.sleep(2);
+            } catch (final InterruptedException e) { }
+        }
+    }
+
+    //elaborazione della simulazione senza toccare l'interfaccia grafica
+    private void tickLogic() {
+        // Nessuno può toccare la mappa finché non finiamo i calcoli
+        synchronized (this.land) {
+            this.movementController.updateMovements();
+            this.friendshipController.updateFriendships();
         }
     }
 }

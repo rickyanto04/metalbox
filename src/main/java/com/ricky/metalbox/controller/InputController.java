@@ -35,15 +35,17 @@ public class InputController {
     private void setupEventHandlers() {
         // GESTIONE BOTTONE UMANO (Generazione Casuale)
         this.view.getAddHumanButton().setOnAction(event -> {
-            int startX, startY;
-            Position spawnPos;
-            do {
-                startX = random.nextInt(200) + 20;
-                startY = random.nextInt(200) + 20;
-                spawnPos = new Position(startX, startY);
-            } while (!land.isCellFree(spawnPos));
+            synchronized (this.land) {
+                int startX, startY;
+                Position spawnPos;
+                do {
+                    startX = random.nextInt(200) + 20;
+                    startY = random.nextInt(200) + 20;
+                    spawnPos = new Position(startX, startY);
+                } while (!land.isCellFree(spawnPos));
 
-            land.addEntity(new Human(spawnPos));
+                land.addEntity(new Human(spawnPos));
+            }
         });
 
         // GESTIONE BOTTONE PAUSA
@@ -116,10 +118,12 @@ public class InputController {
             lastDragPos = null; // Fine della linea
         }
 
+        /*
         // OTTIMIZZAZIONE, ridisegniamo la mappa solo UNA VOLTA alla fine del calcolo, non per ogni singola roccia!
         if (redrawNeeded) {
             this.view.renderMap();
         }
+        */
     }
 
     /*
@@ -158,20 +162,22 @@ public class InputController {
 
     // restituisce true con roccia piazzata e non chiama rendermap internamente
     private boolean tryPlaceRock(Position p) {
-        Rock proposedRock = new Rock(p);
+        synchronized (this.land) {
+            Rock proposedRock = new Rock(p);
 
-        boolean canPlace = true;
-        for (Position occupied : proposedRock.getOccupiedPositions()) {
-            if (!land.isCellFree(occupied)) {
-                canPlace = false;
-                break;
+            boolean canPlace = true;
+            for (Position occupied : proposedRock.getOccupiedPositions()) {
+                if (!land.isCellFree(occupied)) {
+                    canPlace = false;
+                    break;
+                }
             }
-        }
 
-        if (canPlace) {
-            land.addObstacle(proposedRock);
-            return true;
+            if (canPlace) {
+                land.addObstacle(proposedRock);
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 }
