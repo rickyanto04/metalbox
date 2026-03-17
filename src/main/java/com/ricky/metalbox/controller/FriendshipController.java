@@ -1,6 +1,7 @@
 package com.ricky.metalbox.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.ricky.metalbox.model.Entity.Entity;
@@ -31,38 +32,34 @@ public class FriendshipController {
 
             Position e1Anchor = e1.getAnchorPosition();
 
-            for (final Entity e2 : this.land.getEntities()) {
-                if (e1 == e2) continue; // salto l'entità stessa
+            // richiesta delle entità in un raggio di 5 celle.
+            // il sistema scarta in automatico il 99% della mappa senza nemmeno controllarlo
+            List<Entity> nearbyCandidates = this.land.getEntitiesNear(e1Anchor, 5);
+
+            for (final Entity e2 : nearbyCandidates) {
+                if (e1 == e2) continue;
 
                 Position e2Anchor = e2.getAnchorPosition();
-                boolean isNear = false;
 
-                //per il 10x10 attorno ad e1 calcoliamo la distanza assoluta
-                //tra le x e le y dei due punti che siano quindi minori o = a 5
                 int distanceX = Math.abs(e1Anchor.getX() - e2Anchor.getX());
                 int distanceY = Math.abs(e1Anchor.getY() - e2Anchor.getY());
 
                 if (distanceX <= 5 && distanceY <= 5) {
-                    isNear = true;
-                }
-
-                //se sono vicini allora aggiungo ai frame passati +1 se sono ancora vicini attualmente
-                //altrimenti rimuovo la vicinanza totalmente
-                if (isNear) {
                     int ticks = timersForE1.getOrDefault(e2, 0) + 1;
                     timersForE1.put(e2, ticks);
 
                     if (ticks == 50) {
                         e1.addFriend(e2);
                         e2.addFriend(e1);
-
                         System.out.println("new friendship");
                     }
-
                 } else {
                     timersForE1.remove(e2);
                 }
             }
+
+            //rimozione delle entità troppo lontane che non cadono nemmeno nelle nearbycandidates
+            timersForE1.keySet().removeIf(e2 -> !nearbyCandidates.contains(e2));
         }
     }
 }

@@ -24,4 +24,7 @@ public interface Land {
     int getSize();
 
     TerrainType getTerrainAt(Position p);
+
+    // metodo per spatial partitioning
+    List<Entity> getEntitiesNear(Position center, int radius);
 }
