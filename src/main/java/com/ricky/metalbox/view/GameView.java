@@ -14,6 +14,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.VBox;
@@ -33,6 +35,8 @@ public class GameView extends StackPane {
     private final Button pauseButton;
     private final Button addHumanButton;
     private final ToggleButton addRockButton;
+    private final TextField spawnCountField;
+    private final Button spawnMultipleButton;
 
     public GameView(Land land) {
         this.land = land;
@@ -82,9 +86,22 @@ public class GameView extends StackPane {
         this.addRockButton = new ToggleButton("build rock");
         this.addRockButton.setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: lightgray; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
+        // sezione BOTTONI TESTING
+        this.spawnCountField = new TextField("100");
+        this.spawnCountField.setPrefWidth(60);
+        this.spawnCountField.setStyle("-fx-padding: 10px; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+
+        this.spawnMultipleButton = new Button("spawn X humans");
+        this.spawnMultipleButton.setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: lightblue; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
+
+        HBox multiSpawnContainer = new HBox(5);
+        multiSpawnContainer.setAlignment(Pos.CENTER_RIGHT);
+        multiSpawnContainer.getChildren().addAll(spawnCountField, spawnMultipleButton);
+        // fine sezione TESTING
+
         VBox buttonContainer = new VBox(10);
         buttonContainer.setAlignment(Pos.BOTTOM_RIGHT);
-        buttonContainer.getChildren().addAll(pauseButton, addHumanButton, addRockButton);
+        buttonContainer.getChildren().addAll(pauseButton, addHumanButton, multiSpawnContainer, addRockButton);
         buttonContainer.setPickOnBounds(false);
 
         // sfondo stackpane base
@@ -142,4 +159,7 @@ public class GameView extends StackPane {
             }
         }
     }
+
+    public TextField getSpawnCountField() { return this.spawnCountField; }
+    public Button getSpawnMultipleButton() { return this.spawnMultipleButton; }
 }

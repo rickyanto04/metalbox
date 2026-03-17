@@ -54,6 +54,8 @@ FASE 2: ARCHITETTURA PER LA SCALABILITÀ (CRUCIALE)
     drasticamente le performance (grazie alla linearità in memoria) e
     renderà facilissimo aggiungere nuovi comportamenti.
 
+    **CONTROLLARE redrawneeded in inputcontroller, NON COMPLETATO**
+
 FASE 3: OTTIMIZZAZIONE VISIVA
 
 5.  Rendering Avanzato / Cambio Libreria Grafica

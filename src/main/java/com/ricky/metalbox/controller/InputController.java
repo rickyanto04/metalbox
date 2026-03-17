@@ -78,6 +78,39 @@ public class InputController {
             }
         });
 
+        // GESTIONE BOTTONE SPAWN MULTIPLO
+        this.view.getSpawnMultipleButton().setOnAction(event -> {
+            try {
+                // Legge il numero inserito
+                int count = Integer.parseInt(this.view.getSpawnCountField().getText());
+
+                // Blocchiamo la mappa mentre aggiungiamo la folla
+                synchronized (this.land) {
+                    for (int i = 0; i < count; i++) {
+                        int startX, startY;
+                        Position spawnPos;
+                        int attempts = 0;
+
+                        // Cerca una cella libera (max 50 tentativi per evitare loop se la mappa è piena)
+                        do {
+                            startX = random.nextInt(200) + 20;
+                            startY = random.nextInt(200) + 20;
+                            spawnPos = new Position(startX, startY);
+                            attempts++;
+                        } while (!land.isCellFree(spawnPos) && attempts < 50);
+
+                        // Se ha trovato una cella libera, aggiunge l'umano
+                        if (attempts < 50) {
+                            land.addEntity(new Human(spawnPos));
+                        }
+                    }
+                }
+                System.out.println("Spawn di " + count + " umani completato!");
+            } catch (NumberFormatException e) {
+                System.out.println("Errore: Inserisci un numero valido nella casella.");
+            }
+        });
+
         this.view.getCanvas().addEventHandler(MouseEvent.ANY, event -> {
         if (!isBuildingRock) {
             // Se NON stiamo costruendo, lasciamo che l'evento "passi oltre" verso lo ScrollPane
