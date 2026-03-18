@@ -43,7 +43,7 @@ FASE 2: ARCHITETTURA PER LA SCALABILITÀ (CRUCIALE)
     Quando un umano cerca amici vicini, dovrà controllare solo le entità
     registrate nella sua stessa cella spaziale o in quelle adiacenti.
 
-    **NON COMPLETATO, CODICE PRONTO, ora i controlli nel caso di 500 entità sono scesi da 250000 a 2500, 10000% di boost di prestazioni**
+    **COMPLETATO, ora i controlli nel caso di 500 entità sono scesi da 250000 a 2500, 10000% di boost di prestazioni**
 
 4.  Passaggio a ECS - Entity Component System
     Azione:
