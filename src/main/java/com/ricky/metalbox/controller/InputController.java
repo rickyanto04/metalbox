@@ -1,8 +1,15 @@
 package com.ricky.metalbox.controller;
 
+import java.util.List;
 import java.util.Random;
 
 import com.ricky.metalbox.model.Entity.Human;
+import com.ricky.metalbox.model.ECS.EntityManager;
+import com.ricky.metalbox.model.ECS.Components.PositionComponent;
+import com.ricky.metalbox.model.ECS.Components.ShapeComponent;
+import com.ricky.metalbox.model.ECS.Components.TargetComponent;
+import com.ricky.metalbox.model.ECS.Components.ThinkingComponent;
+import com.ricky.metalbox.model.Land.AbstractLand;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Obstacle.Rock;
 import com.ricky.metalbox.model.Utilities.Position;
@@ -35,7 +42,7 @@ public class InputController {
     private void setupEventHandlers() {
         // GESTIONE BOTTONE UMANO (Generazione Casuale)
         this.view.getAddHumanButton().setOnAction(event -> {
-            synchronized (this.land) {
+                synchronized (this.land) {
                 int startX, startY;
                 Position spawnPos;
                 do {
@@ -44,7 +51,20 @@ public class InputController {
                     spawnPos = new Position(startX, startY);
                 } while (!land.isCellFree(spawnPos));
 
-                land.addEntity(new Human(spawnPos));
+                // 1. Creiamo un ID per il nuovo "Umano"
+                EntityManager em = ((AbstractLand)land).getEntityManager();
+                int entityId = em.createEntity();
+
+                // 2. Gli appiccichiamo le sue caratteristiche (Componenti)
+                em.positionComponents[entityId] = new PositionComponent(spawnPos.getX(), spawnPos.getY());
+
+                em.shapeComponents[entityId] = new ShapeComponent(List.of(
+                    new Position(0, 0), new Position(2, 0),
+                    new Position(1, 1), new Position(1, 2)
+                ));
+
+                em.targetComponents[entityId] = new TargetComponent();
+                em.thinkingComponents[entityId] = new ThinkingComponent();
             }
         });
 
