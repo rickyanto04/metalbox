@@ -2,7 +2,7 @@ package com.ricky.metalbox.controller;
 
 import java.util.Random;
 
-import com.ricky.metalbox.model.Entity.Entity;
+import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Utilities.Position;
 
@@ -17,60 +17,61 @@ public class MovementController {
     }
 
     public void updateMovements() {
-        for (final Entity entity : this.land.getEntities()) {
+        EntityManager em = land.getEntityManager();
 
-            // gestione thinking time
-            int thinkingTicks = entity.getThinkingTicks();
-            if (thinkingTicks > 0) {
-                // se l'entità sta riposando, riduco il tempo di attesa di 1 e passo alla prossima
-                entity.setThinkingTicks(thinkingTicks - 1);
+        // loop ecs di iterazione su array
+        for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
+            // saltiamo id morti o quelli che non hanno i componenti necessari per muoversi
+            if (!em.isAlive[i] || em.positionComponents[i] == null || em.targetComponents[i] == null || em.thinkingComponents[i] == null) {
                 continue;
             }
 
-            Position current = entity.getAnchorPosition();
-            Position target = entity.getTargetPosition();
+            int id = i;
 
-            // target nullo o entità arrivata a destinazione allora si genera nuovo target senza prendere in considerazione il bordo
-            if (target == null || (current.getX() == target.getX() && current.getY() == target.getY())) {
+            // gestione thinking time
+            if (em.thinkingComponents[id].ticksRemaining > 0) {
+                em.thinkingComponents[id].ticksRemaining--;
+                continue;
+            }
 
-                // se l'entità è arrivata a destinazione/ target NON nullo, pensa
-                // se invece è appena spawnata / target è nullo, salta questo blocco e NON pensa
-                if (target != null) {
-                    int thinkingTime = this.random.nextInt(96) + 5; // 1 a 5 secondi
-                    entity.setThinkingTicks(thinkingTime);
+            int currentX = em.positionComponents[id].x;
+            int currentY = em.positionComponents[id].y;
+            boolean hasTarget = em.targetComponents[id].hasTarget;
+
+            // se non c'è target o siamo arrivati a destinazione
+            if (!hasTarget || (currentX == em.targetComponents[id].targetX && currentY == em.targetComponents[id].targetY)) {
+
+                if (hasTarget) { // era arrivato a destinazione
+                    em.thinkingComponents[id].ticksRemaining = this.random.nextInt(96) + 5;
                 }
 
-                //ciclo che continua a generare coordinate finché non trova una cella libera da ostacoli/entità
-                int newX, newY;
+                Position target;
                 do {
-                    newX = this.random.nextInt(240) + 8;
-                    newY = this.random.nextInt(240) + 8;
-                    target = new Position(newX, newY);
+                    target = new Position(this.random.nextInt(240) + 8, this.random.nextInt(240) + 8);
                 } while (!this.land.isCellFree(target));
 
-                entity.setTargetPosition(target);
+                em.targetComponents[id].targetX = target.getX();
+                em.targetComponents[id].targetY = target.getY();
+                em.targetComponents[id].hasTarget = true;
 
-                //salta la fase di movement in quanto deve pensare prima di partire per la prossima meta
-                if (entity.getThinkingTicks() > 0) {
+                if (em.thinkingComponents[id].ticksRemaining > 0) {
                     continue;
                 }
             }
 
-            // direzione +1, 0, o -1 verso il target
-            // restituisce -1 se target < current, 0 se uguale, 1 se target > current
-            int deltaX = Integer.compare(target.getX(), current.getX());
-            int deltaY = Integer.compare(target.getY(), current.getY());
+            int targetX = em.targetComponents[id].targetX;
+            int targetY = em.targetComponents[id].targetY;
+
+            int deltaX = Integer.compare(targetX, currentX);
+            int deltaY = Integer.compare(targetY, currentY);
 
             if (deltaX != 0 || deltaY != 0) {
-                Position nextStep = new Position(current.getX() + deltaX, current.getY() + deltaY);
-                boolean movedSuccessfully = this.land.moveEntity(entity, nextStep);
+                Position nextStep = new Position(currentX + deltaX, currentY + deltaY);
+                boolean movedSuccessfully = this.land.moveEntity(id, nextStep);
 
-                // se moveentity restituisce false, significa che la strada è bloccata, reset del target a null
                 if (!movedSuccessfully) {
-                    entity.setTargetPosition(null);
-
-                    // confusione da 0.4 secondi a 1.2 secondi nel caso sbatta contro qualcosa dato !movedSuccesfully
-                    entity.setThinkingTicks(this.random.nextInt(5) + 2);
+                    em.targetComponents[id].hasTarget = false; // Reset target
+                    em.thinkingComponents[id].ticksRemaining = this.random.nextInt(5) + 2; // Confusione
                 }
             }
         }

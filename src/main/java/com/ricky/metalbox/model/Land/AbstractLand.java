@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
-import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Obstacle.Obstacle;
 import com.ricky.metalbox.model.Utilities.Position;
 
@@ -18,15 +17,12 @@ public abstract class AbstractLand implements Land {
     //gestione ostacoli con OOP
     protected final List<Obstacle> obstacles = new ArrayList<>();
 
-    private List<List<Entity>> spatialChunks;
+    //variabili per spatial partitioning tramite id entità
+    private List<List<Integer>> spatialChunks;
     private final int CHUNK_SIZE = 10; // ogni partizione sarà 10x10 celle
     private int chunksPerRow;
 
-    public EntityManager getEntityManager() {
-        return this.entityManager;
-    }
-
-    @Override public List<Entity> getEntities() { return Collections.unmodifiableList(this.entities); }
+    @Override public EntityManager getEntityManager() { return this.entityManager; }
     @Override public List<Obstacle> getObstacles() { return Collections.unmodifiableList(this.obstacles); }
 
     // ---> METODI ASTRATTI che la classe matrice (LandImpl) dovrà definire
@@ -56,49 +52,64 @@ public abstract class AbstractLand implements Land {
         return (cy * chunksPerRow) + cx;
     }
 
-    // ---> METODI GESTIONALI SPOSTATI DALL'IMPL ALLA CLASSE ASTRATTA
-    @Override
-    public boolean addEntity(final Entity e) {
-        for(Position p : e.getOccupiedPositions()) {
-            if (!isCellFree(p)) return false;
-        }
-        for(Position p : e.getOccupiedPositions()) {
-            setCellOccupied(p, true);
-        }
-        this.entities.add(e);
+    // aggiunta di entità al database
+    public void registerEntity(final int entityId) {
+        initSpatialGridIfNeeded();
+        Position pos = new Position(entityManager.positionComponents[entityId].x, entityManager.positionComponents[entityId].y);
 
-        //aggiunta dell'entità alla partizione corretta
-        int chunkIdx = getChunkIndex(e.getAnchorPosition());
-        this.spatialChunks.get(chunkIdx).add(e);
-        return true;
+        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+            setCellOccupied(new Position(pos.getX() + relative.getX(), pos.getY() + relative.getY()), true);
+        }
+
+        int chunkIdx = getChunkIndex(pos);
+        this.spatialChunks.get(chunkIdx).add(entityId);
     }
 
     @Override
-    public boolean moveEntity(final Entity e, final Position newAnchorPos) {
-        Position oldAnchorPos = e.getAnchorPosition();
-        for(Position p : e.getOccupiedPositions()) setCellOccupied(p, false);
+    public boolean moveEntity(final int entityId, final Position newPos) {
+        initSpatialGridIfNeeded();
+        Position oldPos = new Position(
+            entityManager.positionComponents[entityId].x,
+            entityManager.positionComponents[entityId].y
+        );
 
-        e.setAnchorPosition(newAnchorPos);
-        for(Position p : e.getOccupiedPositions()) {
-            if (!isCellFree(p)) {
-                e.setAnchorPosition(oldAnchorPos);
-                // Rollback in caso di fallimento
-                for(Position oldP : e.getOccupiedPositions()) setCellOccupied(oldP, true);
-                return false;
+        // libera old positions
+        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+            setCellOccupied(new Position(oldPos.getX() + relative.getX(), oldPos.getY() + relative.getY()), false);
+        }
+
+        // controllo se nuova pos è libera
+        boolean canMove = true;
+        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+            if (!isCellFree(new Position(newPos.getX() + relative.getX(), newPos.getY() + relative.getY()))) {
+                canMove = false;
+                break;
             }
         }
 
-        for(Position p : e.getOccupiedPositions()) setCellOccupied(p, true);
-
-        // aggiornamento dell'appartenenza di un entità
-        // ad una partizione nel caso dell'attraversamento di un confine
-        int oldChunkIdx = getChunkIndex(oldAnchorPos);
-        int newChunkIdx = getChunkIndex(newAnchorPos);
-        if (oldChunkIdx != newChunkIdx) {
-            this.spatialChunks.get(oldChunkIdx).remove(e);
-            this.spatialChunks.get(newChunkIdx).add(e);
+        // rollback per urto contro muro
+        if (!canMove) {
+            for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+                setCellOccupied(new Position(oldPos.getX() + relative.getX(), oldPos.getY() + relative.getY()), true);
+            }
+            return false;
         }
 
+        // occupa nuove posizioni e aggiorna dati
+        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+            setCellOccupied(new Position(newPos.getX() + relative.getX(), newPos.getY() + relative.getY()), true);
+        }
+
+        entityManager.positionComponents[entityId].x = newPos.getX();
+        entityManager.positionComponents[entityId].y = newPos.getY();
+
+        // aggiornamento spatial grid se l'entità cambia chunk
+        int oldChunkIdx = getChunkIndex(oldPos);
+        int newChunkIdx = getChunkIndex(newPos);
+        if (oldChunkIdx != newChunkIdx) {
+            this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
+            this.spatialChunks.get(newChunkIdx).add(entityId);
+        }
         return true;
     }
 
@@ -114,19 +125,18 @@ public abstract class AbstractLand implements Land {
         return true;
     }
 
-    //ricerca veloce delle entità vicine
+    //ricerca entità vicine
     @Override
-    public List<Entity> getEntitiesNear(final Position center, final int radius) {
+    public List<Integer> getEntitiesNear(final Position center, final int radius) {
         initSpatialGridIfNeeded();
-        List<Entity> nearbyEntities = new ArrayList<>();
+        List<Integer> nearbyEntities = new ArrayList<>();
 
-        //coordinate dei settori che compongono il quadrato attorno a noi
+        //angoli chunk
         int startCX = Math.max(0, (center.getX() - radius) / CHUNK_SIZE);
         int endCX = Math.min(chunksPerRow - 1, (center.getX() + radius) / CHUNK_SIZE);
         int startCY = Math.max(0, (center.getY() - radius) / CHUNK_SIZE);
         int endCY = Math.min(chunksPerRow - 1, (center.getY() + radius) / CHUNK_SIZE);
 
-        // raccogliamo i contenuti solo dei settori adiacenti rilevanti
         for (int cy = startCY; cy <= endCY; cy++) {
             for (int cx = startCX; cx <= endCX; cx++) {
                 int chunkIdx = (cy * chunksPerRow) + cx;

@@ -4,22 +4,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Utilities.Position;
 
 public class FriendshipController {
 
     private final Land land;
-    //mappa dei timer
-    private final Map<Entity, Map<Entity, Integer>> proximityTimers;
 
     public FriendshipController(final Land land) {
         this.land = land;
-        this.proximityTimers = new HashMap<>();
     }
 
     public void updateFriendships() {
+        /*
         // per ogni entità controlliamo se nel 10x10 attorno al suo anchor sono presenti altre entità
         // se non c'è alcuna entità si va avanti
         // se le entità attorno rimangono vicine alla centrale per più di 10 secondi allora diventano amiche
@@ -61,5 +58,6 @@ public class FriendshipController {
             //rimozione delle entità troppo lontane che non cadono nemmeno nelle nearbycandidates
             timersForE1.keySet().removeIf(e2 -> !nearbyCandidates.contains(e2));
         }
+            */
     }
 }

@@ -3,7 +3,6 @@ package com.ricky.metalbox.controller;
 import java.util.List;
 import java.util.Random;
 
-import com.ricky.metalbox.model.Entity.Human;
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.ECS.Components.PositionComponent;
 import com.ricky.metalbox.model.ECS.Components.ShapeComponent;
@@ -51,11 +50,11 @@ public class InputController {
                     spawnPos = new Position(startX, startY);
                 } while (!land.isCellFree(spawnPos));
 
-                // 1. Creiamo un ID per il nuovo "Umano"
+                // creazione id per il nuovo umano
                 EntityManager em = ((AbstractLand)land).getEntityManager();
                 int entityId = em.createEntity();
 
-                // 2. Gli appiccichiamo le sue caratteristiche (Componenti)
+                // unione dei componenti all'id
                 em.positionComponents[entityId] = new PositionComponent(spawnPos.getX(), spawnPos.getY());
 
                 em.shapeComponents[entityId] = new ShapeComponent(List.of(
@@ -65,6 +64,8 @@ public class InputController {
 
                 em.targetComponents[entityId] = new TargetComponent();
                 em.thinkingComponents[entityId] = new ThinkingComponent();
+
+                ((AbstractLand)land).registerEntity(entityId); //aggiunge umano a land e chunk
             }
         });
 
@@ -121,7 +122,19 @@ public class InputController {
 
                         // Se ha trovato una cella libera, aggiunge l'umano
                         if (attempts < 50) {
-                            land.addEntity(new Human(spawnPos));
+                            EntityManager em = land.getEntityManager();
+                            int entityId = em.createEntity();
+
+                            em.positionComponents[entityId] = new PositionComponent(spawnPos.getX(), spawnPos.getY());
+                            em.shapeComponents[entityId] = new ShapeComponent(List.of(
+                                new Position(0, 0), new Position(2, 0),
+                                new Position(1, 1), new Position(1, 2)
+                            ));
+                            em.targetComponents[entityId] = new TargetComponent();
+                            em.thinkingComponents[entityId] = new ThinkingComponent();
+
+                            // Registra l'entità nella mappa e nei chunk
+                            ((AbstractLand)land).registerEntity(entityId);
                         }
                     }
                 }
