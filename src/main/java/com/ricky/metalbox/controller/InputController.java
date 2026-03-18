@@ -168,30 +168,21 @@ public class InputController {
         int gridY = (int) (event.getY() / GameView.TILE_SIZE);
         Position currentPos = new Position(gridX, gridY);
 
-        boolean redrawNeeded = false;
-
         // LOGICA DI DISEGNO CONTINUO
         if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
             lastDragPos = currentPos;
-            redrawNeeded = tryPlaceRock(currentPos);
+            tryPlaceRock(currentPos);
 
         } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
             if (lastDragPos != null) {
                 // Richiama l'algoritmo che disegna i blocchi mancanti tra il frame precedente e questo
-                redrawNeeded = drawLineOfRocks(lastDragPos, currentPos);
+                drawLineOfRocks(lastDragPos, currentPos);
             }
             lastDragPos = currentPos;
 
         } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
             lastDragPos = null; // Fine della linea
         }
-
-        /*
-        // OTTIMIZZAZIONE, ridisegniamo la mappa solo UNA VOLTA alla fine del calcolo, non per ogni singola roccia!
-        if (redrawNeeded) {
-            this.view.renderMap();
-        }
-        */
     }
 
     /*

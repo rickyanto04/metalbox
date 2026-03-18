@@ -1,11 +1,6 @@
 package com.ricky.metalbox.controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.ricky.metalbox.model.Land.Land;
-import com.ricky.metalbox.model.Utilities.Position;
 
 public class FriendshipController {
 
@@ -16,6 +11,7 @@ public class FriendshipController {
     }
 
     public void updateFriendships() {
+        // DA IMPLEMENTARE IN FUTURO UTILIZZANDO ECS(FriendshipComponent)
         /*
         // per ogni entità controlliamo se nel 10x10 attorno al suo anchor sono presenti altre entità
         // se non c'è alcuna entità si va avanti

@@ -3,12 +3,10 @@ package com.ricky.metalbox.controller;
 import com.ricky.metalbox.model.Land.Land;
 
 import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
 
 public class GameController implements Runnable{
 
     private final Land land; // synchronization "lock"
-    private final Runnable viewRepaintCallback;
     private final MovementController movementController;
     private final FriendshipController friendshipController;
 
@@ -27,7 +25,6 @@ public class GameController implements Runnable{
         this.land = land;
         this.movementController = movementController;
         this.friendshipController = friendshipController;
-        this.viewRepaintCallback = viewRepaintCallback;
 
         this.renderTimer = new AnimationTimer() {
             @Override
@@ -90,8 +87,6 @@ public class GameController implements Runnable{
             //calcolo di quanto tempo è passato dall'ultimo ciclo
             delta += (now - lastTime) / timePerTick;
             lastTime = now;
-
-            boolean shouldRender = false;
 
             // se delta >= 1 significa che è passato abbastanza tempo per eseguire uno o più tick
             while (delta >= 1) {

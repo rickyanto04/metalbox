@@ -139,7 +139,6 @@ public class GameView extends StackPane {
                 }
             }
 
-            gc.setFill(Color.DARKSLATEGRAY);
             EntityManager em = land.getEntityManager();
 
             for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
