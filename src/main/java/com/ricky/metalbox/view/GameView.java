@@ -2,7 +2,6 @@ package com.ricky.metalbox.view;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.Land.Land;
-import com.ricky.metalbox.model.Obstacle.Obstacle;
 import com.ricky.metalbox.model.Terrain.TerrainType;
 import com.ricky.metalbox.model.Utilities.Position;
 
@@ -141,23 +140,19 @@ public class GameView extends StackPane {
             }
 
             gc.setFill(Color.DARKSLATEGRAY);
-            for (Obstacle o : land.getObstacles()) {
-                for (Position p : o.getOccupiedPositions()) {
-                    gc.fillRect(p.getX() * TILE_SIZE, p.getY() * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                }
-            }
-
             EntityManager em = land.getEntityManager();
-            // Per ora le dipingiamo tutte di nero (il Friendship System andrà riadattato all'ECS in futuro)
-            gc.setFill(Color.BLACK);
 
             for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
-                if (em.isAlive[i] && em.positionComponents[i] != null && em.shapeComponents[i] != null) {
+                // Disegniamo solo se l'entità è viva e ha tutto ciò che serve per essere vista
+                if (em.isAlive[i] && em.positionComponents[i] != null && em.shapeComponents[i] != null && em.graphicsComponents[i] != null) {
+
+                    // Prende il colore assegnato (Nero per umani, Grigio per le rocce)
+                    gc.setFill(em.graphicsComponents[i].color);
 
                     int anchorX = em.positionComponents[i].x;
                     int anchorY = em.positionComponents[i].y;
 
-                    // Disegniamo ogni blocco della forma relativa
+                    // Disegna i blocchi della forma
                     for (Position relative : em.shapeComponents[i].relativePositions) {
                         int drawX = anchorX + relative.getX();
                         int drawY = anchorY + relative.getY();

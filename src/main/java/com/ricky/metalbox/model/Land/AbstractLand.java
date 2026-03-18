@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
-import com.ricky.metalbox.model.Obstacle.Obstacle;
 import com.ricky.metalbox.model.Utilities.Position;
 
 // creata per poter cambiare la generazione della mappa in futuro ovvero poter avere mappe infinite, esagonali, ecc...
@@ -14,16 +13,12 @@ public abstract class AbstractLand implements Land {
     //gestione entità con ECS
     protected final EntityManager entityManager = new EntityManager();
 
-    //gestione ostacoli con OOP
-    protected final List<Obstacle> obstacles = new ArrayList<>();
-
     //variabili per spatial partitioning tramite id entità
     private List<List<Integer>> spatialChunks;
     private final int CHUNK_SIZE = 10; // ogni partizione sarà 10x10 celle
     private int chunksPerRow;
 
     @Override public EntityManager getEntityManager() { return this.entityManager; }
-    @Override public List<Obstacle> getObstacles() { return Collections.unmodifiableList(this.obstacles); }
 
     // ---> METODI ASTRATTI che la classe matrice (LandImpl) dovrà definire
     protected abstract void setCellOccupied(Position p, boolean occupied);
@@ -110,18 +105,6 @@ public abstract class AbstractLand implements Land {
             this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
             this.spatialChunks.get(newChunkIdx).add(entityId);
         }
-        return true;
-    }
-
-    @Override
-    public boolean addObstacle(final Obstacle o) {
-        for(Position p : o.getOccupiedPositions()) {
-            if (!isCellFree(p)) return false;
-        }
-        for(Position p : o.getOccupiedPositions()) {
-            setCellOccupied(p, true);
-        }
-        this.obstacles.add(o);
         return true;
     }
 

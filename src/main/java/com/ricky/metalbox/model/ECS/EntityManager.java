@@ -3,6 +3,7 @@ package com.ricky.metalbox.model.ECS;
 import com.ricky.metalbox.model.ECS.Components.TargetComponent;
 import com.ricky.metalbox.model.ECS.Components.ThinkingComponent;
 import com.ricky.metalbox.model.ECS.Components.ShapeComponent;
+import com.ricky.metalbox.model.ECS.Components.GraphicsComponent;
 import com.ricky.metalbox.model.ECS.Components.PositionComponent;
 
 public class EntityManager {
@@ -16,6 +17,7 @@ public class EntityManager {
     public final ShapeComponent[] shapeComponents = new ShapeComponent[MAX_ENTITIES];
     public final TargetComponent[] targetComponents = new TargetComponent[MAX_ENTITIES];
     public final ThinkingComponent[] thinkingComponents = new ThinkingComponent[MAX_ENTITIES];
+    public final GraphicsComponent[] graphicsComponents = new GraphicsComponent[MAX_ENTITIES];
 
     public final boolean[] isAlive = new boolean[MAX_ENTITIES];
 
@@ -38,5 +40,6 @@ public class EntityManager {
         shapeComponents[id] = null;
         targetComponents[id] = null;
         thinkingComponents[id] = null;
+        graphicsComponents[id] = null;
     }
 }
