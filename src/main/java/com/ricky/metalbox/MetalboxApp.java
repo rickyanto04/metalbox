@@ -16,31 +16,26 @@ public class MetalboxApp extends Application{
 
     @Override
     public void start(Stage primaryStage) {
-        // 1. Inizializza il Modello
+        // inizializzazione del model
         Land land = new LandImpl();
 
-        // 2. Inizializza la Vista
+        // inizializzazione della view
         GameView view = new GameView(land);
 
-        // 3. Inizializza i Controller Specializzati
+        // inizializzazione dei controller
         MovementController movementController = new MovementController(land);
         FriendshipController friendshipController = new FriendshipController(land);
-
-        // 4. Inizializza il Controller Principale
         GameController gameController = new GameController(land, movementController, friendshipController, view::renderMap);
-
-        // ---> 5. NUOVO: Inizializza l'Input Controller (che aggancerà in automatico i bottoni passati dalla View)
-        // NOTA: il codice che era qui per il bottone pausa è stato spostato nell'InputController!
         new InputController(land, view, gameController);
 
-        // 6. Configurazione della finestra
-        Scene scene = new Scene(view);
+        // configurazione della finestra
+        Scene scene = new Scene(view, 1024, 768);
         primaryStage.setTitle("MetalBox - Sandbox");
         primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
+        primaryStage.setResizable(true);
         primaryStage.show();
 
-        // 7. Avvio
+        // avvio
         view.renderMap();
         gameController.start();
     }

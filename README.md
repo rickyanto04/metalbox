@@ -44,6 +44,7 @@ FASE 2: ARCHITETTURA PER LA SCALABILITÀ (CRUCIALE)
     registrate nella sua stessa cella spaziale o in quelle adiacenti.
 
     **COMPLETATO, ora i controlli nel caso di 500 entità sono scesi da 250000 a 2500, 10000% di boost di prestazioni**
+    **TENERE A MENTE, max_entities è settato a 50000 ma tiene conto anche delle rocce, non solo degli umani, conta le entità totali; quando viene tirata eccezione infatti non sarà più possibile creare rocce**
 
 4.  Passaggio a ECS - Entity Component System
     Azione:
@@ -54,7 +55,12 @@ FASE 2: ARCHITETTURA PER LA SCALABILITÀ (CRUCIALE)
     drasticamente le performance (grazie alla linearità in memoria) e
     renderà facilissimo aggiungere nuovi comportamenti.
 
-    **CONTROLLARE redrawneeded in inputcontroller, NON COMPLETATO**
+    **COMPLETATO, manca il friendship system ma andrà cambiato del tutto quindi lo bypassiamo**
+
+    4.1. FRUSTUM CULLING
+
+    **COMPLETATO, aggiunta di motore grafico con telecamera per poter renderizzare solamente ciò che viene visto direttamente da essa**
+    **TENERE A MENTE, quando si vede la mappa intera fino a metà il lag c'è (mappa 1000x1000 con chunk 32x32) con zoom più importanti di metà mappa non ha problemi**
 
 FASE 3: OTTIMIZZAZIONE VISIVA
 

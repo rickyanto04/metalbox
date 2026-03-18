@@ -47,7 +47,7 @@ public class MovementController {
 
                 Position target;
                 do {
-                    target = new Position(this.random.nextInt(240) + 8, this.random.nextInt(240) + 8);
+                    target = new Position(this.random.nextInt((this.land.getSize() - 10)) + 8, this.random.nextInt((this.land.getSize() - 10)) + 8);
                 } while (!this.land.isCellFree(target));
 
                 em.targetComponents[id].targetX = target.getX();

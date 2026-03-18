@@ -29,6 +29,9 @@ public class InputController {
     // variabile che mantiene l'ultima posizione del mouse trascinato
     private Position lastDragPos = null;
 
+    private double lastMouseX = -1;
+    private double lastMouseY = -1;
+
     public InputController(final Land land, final GameView view, final GameController gameController) {
         this.land = land;
         this.view = view;
@@ -45,8 +48,8 @@ public class InputController {
                 int startX, startY;
                 Position spawnPos;
                 do {
-                    startX = random.nextInt(200) + 20;
-                    startY = random.nextInt(200) + 20;
+                    startX = random.nextInt(this.land.getSize() - 40) + 20;
+                    startY = random.nextInt(this.land.getSize() - 40) + 20;
                     spawnPos = new Position(startX, startY);
                 } while (!land.isCellFree(spawnPos));
 
@@ -88,9 +91,6 @@ public class InputController {
             // isSelected() ritorna true se il bottone è "schiacciato", false se rilasciato
             this.isBuildingRock = this.view.getAddRockButton().isSelected();
 
-            // interruttore per il panning
-            this.view.getScrollPane().setPannable(!this.isBuildingRock);
-
             if (this.isBuildingRock) {
                 this.view.getAddRockButton().setStyle("-fx-opacity: 1.0; -fx-padding: 10px 20px; -fx-cursor: crosshair; -fx-background-color: #ffdd99; -fx-border-color: black; -fx-border-width: 2px; -fx-border-radius: 3px; -fx-background-radius: 3px;");
                 this.view.getCanvas().setCursor(javafx.scene.Cursor.CROSSHAIR);
@@ -115,8 +115,8 @@ public class InputController {
 
                         // Cerca una cella libera (max 50 tentativi per evitare loop se la mappa è piena)
                         do {
-                            startX = random.nextInt(200) + 20;
-                            startY = random.nextInt(200) + 20;
+                            startX = random.nextInt(this.land.getSize() - 40) + 20;
+                            startY = random.nextInt(this.land.getSize() - 40) + 20;
                             spawnPos = new Position(startX, startY);
                             attempts++;
                         } while (!land.isCellFree(spawnPos) && attempts < 50);
@@ -146,48 +146,67 @@ public class InputController {
             }
         });
 
-        this.view.getCanvas().addEventHandler(MouseEvent.ANY, event -> {
-        if (!isBuildingRock) {
-            // Se NON stiamo costruendo, lasciamo che l'evento "passi oltre" verso lo ScrollPane
-            return;
-        }
-        handleMapClickOrDrag(event);
-        event.consume(); // Consumiamo l'evento così non attiva il panning durante la costruzione
-    });
+        // gestione zoom con rotellina mouse
+        this.view.getCanvas().setOnScroll(event -> {
+            double zoomFactor = event.getDeltaY() > 0 ? 1.1 : 0.9;
+            double newZoom = this.view.getZoom() * zoomFactor;
+            this.view.setZoom(Math.max(0.1, Math.min(10.0, newZoom))); // Limita lo zoom
+        });
+
+        // gestione click e trascinamento(panning e costruzione)
+        this.view.getCanvas().setOnMousePressed(event -> {
+            lastMouseX = event.getX();
+            lastMouseY = event.getY();
+            if (isBuildingRock && event.isPrimaryButtonDown()) handleMapClickOrDrag(event);
+        });
+
+        this.view.getCanvas().setOnMouseDragged(event -> {
+            // Tasto Destro (o Sinistro se NON stiamo costruendo) = Muovi Telecamera (Panning)
+            if (event.isSecondaryButtonDown() || (!isBuildingRock && event.isPrimaryButtonDown())) {
+                double deltaX = event.getX() - lastMouseX;
+                double deltaY = event.getY() - lastMouseY;
+                this.view.setCameraX(this.view.getCameraX() - deltaX);
+                this.view.setCameraY(this.view.getCameraY() - deltaY);
+            }
+            // Tasto Sinistro (Mentre costruiamo) = Piazza Rocce
+            else if (isBuildingRock && event.isPrimaryButtonDown()) {
+                handleMapClickOrDrag(event);
+            }
+            lastMouseX = event.getX();
+            lastMouseY = event.getY();
+        });
+
+        this.view.getCanvas().setOnMouseReleased(event -> {
+            if (isBuildingRock && event.getButton() == javafx.scene.input.MouseButton.PRIMARY) {
+                handleMapClickOrDrag(event);
+            }
+        });
     }
 
     private void handleMapClickOrDrag(MouseEvent event) {
-        // Se non abbiamo schiacciato il bottone "build rock", ignoriamo i click sulla mappa
         if (!isBuildingRock) return;
 
-        // assicuriamoci che si stia usando il tasto sx del mouse
-        if (!event.isPrimaryButtonDown() && event.getEventType() != MouseEvent.MOUSE_PRESSED) return;
+        // trasformazione dei pixel dello schermo in coordinate assolute del mondo
+        double worldX = (event.getX() + this.view.getCameraX()) / this.view.getZoom();
+        double worldY = (event.getY() + this.view.getCameraY()) / this.view.getZoom();
 
-        // Convertiamo i Pixel del mouse in coordinate della Griglia
-        int gridX = (int) (event.getX() / GameView.TILE_SIZE);
-        int gridY = (int) (event.getY() / GameView.TILE_SIZE);
+        int gridX = (int) (worldX / GameView.TILE_SIZE);
+        int gridY = (int) (worldY / GameView.TILE_SIZE);
         Position currentPos = new Position(gridX, gridY);
 
-        // LOGICA DI DISEGNO CONTINUO
         if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
             lastDragPos = currentPos;
             tryPlaceRock(currentPos);
-
         } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
-            if (lastDragPos != null) {
-                // Richiama l'algoritmo che disegna i blocchi mancanti tra il frame precedente e questo
-                drawLineOfRocks(lastDragPos, currentPos);
-            }
+            if (lastDragPos != null) drawLineOfRocks(lastDragPos, currentPos);
             lastDragPos = currentPos;
-
         } else if (event.getEventType() == MouseEvent.MOUSE_RELEASED) {
-            lastDragPos = null; // Fine della linea
+            lastDragPos = null;
         }
     }
 
-    /*
-    Algoritmo di Bresenham per interpolazione della linea
-    */
+
+    // Algoritmo di Bresenham (per interpolazione della linea)
     private boolean drawLineOfRocks(Position start, Position end) {
         boolean anyRockPlaced = false;
         int x0 = start.getX();

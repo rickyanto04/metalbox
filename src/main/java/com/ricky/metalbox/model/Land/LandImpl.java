@@ -5,7 +5,7 @@ import com.ricky.metalbox.model.Utilities.Position;
 
 public class LandImpl extends AbstractLand {
 
-    private static final int landSize = 250;
+    private static final int landSize = 1000;
 
     private final byte[] terrainGrid;
     private final boolean[] occupiedGrid;

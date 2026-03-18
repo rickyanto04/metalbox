@@ -7,14 +7,13 @@ import com.ricky.metalbox.model.Utilities.Position;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.VBox;
@@ -23,12 +22,14 @@ public class GameView extends StackPane {
 
     // public, così l'InputController può usarle per calcolare le coordinate del mouse
     public static final int TILE_SIZE = 3;
-    public static final int MAP_SIZE = 250;
 
     private final Land land;
     private final Canvas canvas;
 
-    private final ScrollPane scrollPane;
+    // variabili telecamera
+    private double cameraX = 0;
+    private double cameraY = 0;
+    private double zoom = 1.0;
 
     // bottoni come variabili di classe
     private final Button pauseButton;
@@ -39,42 +40,11 @@ public class GameView extends StackPane {
 
     public GameView(Land land) {
         this.land = land;
-        this.canvas = new Canvas(MAP_SIZE * TILE_SIZE, MAP_SIZE * TILE_SIZE);
+        this.canvas = new Canvas(800, 600);
 
-        javafx.scene.transform.Scale scaleTransform = new javafx.scene.transform.Scale(1, 1, 0, 0);
-        this.canvas.getTransforms().add(scaleTransform);
-
-        Group scrollContent = new Group(this.canvas);
-
-        // centraggio del dezoom, stackpane intermedio
-        StackPane centerPane = new StackPane(scrollContent);
-        centerPane.setAlignment(Pos.CENTER);
-        centerPane.setStyle("-fx-background-color: #0F5E9C;");
-
-        // Inseriamo il Group DIRETTAMENTE nello ScrollPane
-        this.scrollPane = new ScrollPane(centerPane);
-
-        scrollPane.setPannable(true);
-        scrollPane.setFitToHeight(true);
-        scrollPane.setFitToWidth(true);
-
-        // oceano esterno
-        scrollPane.setStyle("-fx-background: #0F5E9C; -fx-background-color: #0F5E9C; -fx-border-color: transparent;");
-
-        // logica di Zoom (CTRL + rotellina mouse) + eventfilter per zoom intermittente
-        this.scrollPane.addEventFilter(javafx.scene.input.ScrollEvent.SCROLL, event -> {
-            if (event.isControlDown()) {
-                event.consume(); // Fermiamo lo scroll nativo della pagina
-
-                // Calcolo fluido e reattivo ogni singola volta che la rotellina gira
-                double zoomFactor = event.getDeltaY() > 0 ? 1.1 : 0.9;
-                double currentScale = scaleTransform.getX();
-                double newScale = Math.max(0.5, Math.min(10.0, currentScale * zoomFactor));
-
-                scaleTransform.setX(newScale);
-                scaleTransform.setY(newScale);
-            }
-        });
+        Pane canvasContainer = new Pane(this.canvas);
+        this.canvas.widthProperty().bind(canvasContainer.widthProperty());
+        this.canvas.heightProperty().bind(canvasContainer.heightProperty());
 
         this.pauseButton = new Button("pause simulation");
         this.pauseButton.setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: #ffcccc; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
@@ -85,7 +55,6 @@ public class GameView extends StackPane {
         this.addRockButton = new ToggleButton("build rock");
         this.addRockButton.setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: lightgray; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
-        // sezione BOTTONI TESTING
         this.spawnCountField = new TextField("100");
         this.spawnCountField.setPrefWidth(60);
         this.spawnCountField.setStyle("-fx-padding: 10px; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
@@ -96,37 +65,63 @@ public class GameView extends StackPane {
         HBox multiSpawnContainer = new HBox(5);
         multiSpawnContainer.setAlignment(Pos.CENTER_RIGHT);
         multiSpawnContainer.getChildren().addAll(spawnCountField, spawnMultipleButton);
-        // fine sezione TESTING
 
         VBox buttonContainer = new VBox(10);
         buttonContainer.setAlignment(Pos.BOTTOM_RIGHT);
         buttonContainer.getChildren().addAll(pauseButton, addHumanButton, multiSpawnContainer, addRockButton);
         buttonContainer.setPickOnBounds(false);
 
-        // sfondo stackpane base
         this.setStyle("-fx-background-color: #0F5E9C;");
-        this.getChildren().addAll(scrollPane, buttonContainer);
+        this.getChildren().addAll(canvasContainer, buttonContainer);
 
         StackPane.setAlignment(buttonContainer, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(buttonContainer, new Insets(20));
     }
 
-    // ---> NUOVI GETTER: Espongono i componenti per fargli agganciare gli eventi dal Controller
+    // getter e setter per la telecamera
+    public double getCameraX() { return cameraX; }
+    public void setCameraX(double cameraX) { this.cameraX = cameraX; }
+    public double getCameraY() { return cameraY; }
+    public void setCameraY(double cameraY) { this.cameraY = cameraY; }
+    public double getZoom() { return zoom; }
+    public void setZoom(double zoom) { this.zoom = zoom; }
+
+    // getter generali
     public Canvas getCanvas() { return this.canvas; }
-    public ScrollPane getScrollPane() { return this.scrollPane; }
     public Button getPauseButton() { return this.pauseButton; }
     public Button getAddHumanButton() { return this.addHumanButton; }
     public ToggleButton getAddRockButton() { return this.addRockButton; }
+    public TextField getSpawnCountField() { return this.spawnCountField; }
+    public Button getSpawnMultipleButton() { return this.spawnMultipleButton; }
 
 
-    // Questo metodo (il rendering) rimane invariato, perché è il vero e unico scopo della View!
+    // rendering (Frustum Culling)
     public void renderMap() {
         // blocco della mappa durante il disegno per evitare crash se le entità si muovono nel frattempo
         synchronized (this.land) {
             GraphicsContext gc = canvas.getGraphicsContext2D();
+            double cw = canvas.getWidth();
+            double ch = canvas.getHeight();
 
-            for (int y = 0; y < land.getSize(); y++) {
-                for (int x = 0; x < land.getSize(); x++) {
+            // sfondo oceano globale
+            gc.clearRect(0, 0, cw, ch);
+            gc.setFill(Color.web("#0F5E9C"));
+            gc.fillRect(0, 0, cw, ch);
+
+            // posizionamento telecamera e applicazione zoom
+            gc.save();
+            gc.translate(-cameraX, -cameraY);
+            gc.scale(zoom, zoom);
+
+            // calcolo del quadrato della mappa attualmente visibile
+            int startX = Math.max(0, (int) (cameraX / (TILE_SIZE * zoom)));
+            int startY = Math.max(0, (int) (cameraY / (TILE_SIZE * zoom)));
+            int endX = Math.min(land.getSize(), (int) ((cameraX + cw) / (TILE_SIZE * zoom)) + 1);
+            int endY = Math.min(land.getSize(), (int) ((cameraY + ch) / (TILE_SIZE * zoom)) + 1);
+
+            // disegno delle sole celle visibili
+            for (int y = startY; y < endY; y++) {
+                for (int x = startX; x < endX; x++) {
                     TerrainType type = land.getTerrainAt(new Position(x, y));
                     switch (type) {
                         case WATER: gc.setFill(Color.CORNFLOWERBLUE); break;
@@ -139,29 +134,26 @@ public class GameView extends StackPane {
                 }
             }
 
+            // disegno delle sole entità visibili nelle celle visibili
             EntityManager em = land.getEntityManager();
-
             for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
-                // Disegniamo solo se l'entità è viva e ha tutto ciò che serve per essere vista
                 if (em.isAlive[i] && em.positionComponents[i] != null && em.shapeComponents[i] != null && em.graphicsComponents[i] != null) {
+                    int ax = em.positionComponents[i].x;
+                    int ay = em.positionComponents[i].y;
 
-                    // Prende il colore assegnato (Nero per umani, Grigio per le rocce)
-                    gc.setFill(em.graphicsComponents[i].color);
-
-                    int anchorX = em.positionComponents[i].x;
-                    int anchorY = em.positionComponents[i].y;
-
-                    // Disegna i blocchi della forma
-                    for (Position relative : em.shapeComponents[i].relativePositions) {
-                        int drawX = anchorX + relative.getX();
-                        int drawY = anchorY + relative.getY();
-                        gc.fillRect(drawX * TILE_SIZE, drawY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    // margine di tolleranza di 5 celle per le rocce grandi
+                    if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
+                        gc.setFill(em.graphicsComponents[i].color);
+                        for (Position relative : em.shapeComponents[i].relativePositions) {
+                            int drawX = ax + relative.getX();
+                            int drawY = ay + relative.getY();
+                            gc.fillRect(drawX * TILE_SIZE, drawY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        }
                     }
                 }
             }
+
+            gc.restore(); // reset telecamera per frame successivo
         }
     }
-
-    public TextField getSpawnCountField() { return this.spawnCountField; }
-    public Button getSpawnMultipleButton() { return this.spawnMultipleButton; }
 }

@@ -14,7 +14,7 @@ public abstract class AbstractLand implements Land {
 
     //variabili per spatial partitioning tramite id entità
     private List<List<Integer>> spatialChunks;
-    private final int CHUNK_SIZE = 10; // ogni partizione sarà 10x10 celle
+    private final int CHUNK_SIZE = 32; // ogni partizione sarà 32x32 celle
     private int chunksPerRow;
 
     @Override public EntityManager getEntityManager() { return this.entityManager; }
@@ -28,7 +28,7 @@ public abstract class AbstractLand implements Land {
     //lazy initialization quando serve per la prima volta
     private void initSpatialGridIfNeeded() {
         if (this.spatialChunks == null) {
-            //calcolo di quante partizioni ci stanno in una riga (250/10 = 25)
+            //calcolo di quante partizioni ci stanno in una riga (es: 1000/32 = 31.25)
             this.chunksPerRow = (int) Math.ceil((double) getSize() / CHUNK_SIZE);
             int totalChunks = this.chunksPerRow * this.chunksPerRow;
 
