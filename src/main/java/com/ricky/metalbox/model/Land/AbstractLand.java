@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.Entity.Entity;
 import com.ricky.metalbox.model.Obstacle.Obstacle;
 import com.ricky.metalbox.model.Utilities.Position;
@@ -11,13 +12,19 @@ import com.ricky.metalbox.model.Utilities.Position;
 // creata per poter cambiare la generazione della mappa in futuro ovvero poter avere mappe infinite, esagonali, ecc...
 public abstract class AbstractLand implements Land {
 
-    // Gestione centralizzata delle liste di elementi nel mondo
-    protected final List<Entity> entities = new ArrayList<>();
+    //gestione entità con ECS
+    protected final EntityManager entityManager = new EntityManager();
+
+    //gestione ostacoli con OOP
     protected final List<Obstacle> obstacles = new ArrayList<>();
 
     private List<List<Entity>> spatialChunks;
     private final int CHUNK_SIZE = 10; // ogni partizione sarà 10x10 celle
     private int chunksPerRow;
+
+    public EntityManager getEntityManager() {
+        return this.entityManager;
+    }
 
     @Override public List<Entity> getEntities() { return Collections.unmodifiableList(this.entities); }
     @Override public List<Obstacle> getObstacles() { return Collections.unmodifiableList(this.obstacles); }
