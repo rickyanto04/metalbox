@@ -1,7 +1,9 @@
 package com.ricky.metalbox.model.Land;
 
 import java.util.List;
+import java.util.Set;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.ECS.EntityType;
@@ -14,7 +16,7 @@ public abstract class AbstractLand implements Land {
     protected final EntityManager entityManager = new EntityManager();
 
     //variabili per spatial partitioning tramite id entità
-    private List<List<Integer>> spatialChunks;
+    private List<Set<Integer>> spatialChunks;
     private final int CHUNK_SIZE = 32; // ogni partizione sarà 32x32 celle
     private int chunksPerRow;
 
@@ -35,7 +37,7 @@ public abstract class AbstractLand implements Land {
 
             this.spatialChunks = new ArrayList<>(totalChunks);
             for (int i = 0; i < totalChunks; i++) {
-                this.spatialChunks.add(new ArrayList<>());
+                this.spatialChunks.add(new HashSet<>());
             }
         }
     }
