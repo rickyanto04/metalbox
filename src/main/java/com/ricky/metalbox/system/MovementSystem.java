@@ -1,25 +1,27 @@
-package com.ricky.metalbox.controller;
+package com.ricky.metalbox.system;
 
 import java.util.concurrent.ThreadLocalRandom; // più veloce del campo random condiviso
 
 import com.ricky.metalbox.model.ECS.EntityManager;
+import com.ricky.metalbox.model.ECS.EntityType;
 import com.ricky.metalbox.model.Land.Land;
 
-public class MovementController {
+public class MovementSystem implements EntitySystem{
 
     private final Land land;
 
-    public MovementController(final Land land) {
+    public MovementSystem(final Land land) {
         this.land = land;
     }
 
-    public void updateMovements() {
+    @Override
+    public void update() {
         EntityManager em = land.getEntityManager();
 
         // loop ecs di iterazione su array
         for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
             // saltiamo id morti o quelli che non hanno i componenti necessari per muoversi
-            if (!em.isAlive[i] || em.type[i] != (byte) com.ricky.metalbox.model.ECS.EntityType.HUMAN.ordinal()) {
+            if (!em.isAlive[i] || em.type[i] != (byte) EntityType.HUMAN.ordinal()) {
                 continue;
             }
 

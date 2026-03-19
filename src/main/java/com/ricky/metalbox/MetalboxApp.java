@@ -1,11 +1,11 @@
 package com.ricky.metalbox;
 
-import com.ricky.metalbox.controller.FriendshipController;
 import com.ricky.metalbox.controller.GameController;
 import com.ricky.metalbox.controller.InputController;
-import com.ricky.metalbox.controller.MovementController;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Land.LandImpl;
+import com.ricky.metalbox.system.FriendshipSystem;
+import com.ricky.metalbox.system.MovementSystem;
 import com.ricky.metalbox.view.GameView;
 
 import javafx.application.Application;
@@ -22,10 +22,11 @@ public class MetalboxApp extends Application{
         // inizializzazione della view
         GameView view = new GameView(land);
 
-        // inizializzazione dei controller
-        MovementController movementController = new MovementController(land);
-        FriendshipController friendshipController = new FriendshipController(land);
-        GameController gameController = new GameController(movementController, friendshipController, view::renderMap);
+        // inizializzazione dell'architettura ECS
+        GameController gameController = new GameController(view::renderMap);
+        gameController.addSystem(new MovementSystem(land));
+        gameController.addSystem(new FriendshipSystem(land));
+
         new InputController(land, view, gameController);
 
         // configurazione della finestra
@@ -36,7 +37,6 @@ public class MetalboxApp extends Application{
         primaryStage.show();
 
         // avvio
-        view.renderMap();
         gameController.start();
     }
 

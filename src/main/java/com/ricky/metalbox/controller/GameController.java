@@ -1,11 +1,16 @@
 package com.ricky.metalbox.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.ricky.metalbox.system.EntitySystem;
+
 import javafx.animation.AnimationTimer;
 
 public class GameController implements Runnable{
 
-    private final MovementController movementController;
-    private final FriendshipController friendshipController;
+    //sistemi ECS
+    private final List<EntitySystem> systems;
 
     //thread di simulazione
     private Thread logicThread;
@@ -18,9 +23,8 @@ public class GameController implements Runnable{
     // questo è il simulation tick indipendente
     private static final double TICK_RATE = 30.0;
 
-    public GameController(final MovementController movementController, final FriendshipController friendshipController, final Runnable viewRepaintCallback) {
-        this.movementController = movementController;
-        this.friendshipController = friendshipController;
+    public GameController(final Runnable viewRepaintCallback) {
+        this.systems = new ArrayList<>();
 
         this.renderTimer = new AnimationTimer() {
             @Override
@@ -30,6 +34,10 @@ public class GameController implements Runnable{
                 }
             }
         };
+    }
+
+    public void addSystem(final EntitySystem entitySystem) {
+        this.systems.add(entitySystem);
     }
 
     public void start() {
@@ -97,9 +105,10 @@ public class GameController implements Runnable{
         }
     }
 
-    //elaborazione della simulazione senza toccare l'interfaccia grafica
+    // iterazione su tutti i sistemi per mantenere modularità
     private void tickLogic() {
-        this.movementController.updateMovements();
-        this.friendshipController.updateFriendships();
+        for (EntitySystem system : this.systems) {
+            system.update();
+        }
     }
 }

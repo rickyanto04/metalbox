@@ -1,16 +1,16 @@
-package com.ricky.metalbox.controller;
+package com.ricky.metalbox.system;
 
 import com.ricky.metalbox.model.Land.Land;
 
-public class FriendshipController {
+public class FriendshipSystem implements EntitySystem{
 
     private final Land land;
 
-    public FriendshipController(final Land land) {
+    public FriendshipSystem(final Land land) {
         this.land = land;
     }
 
-    public void updateFriendships() {
+    public void update() {
         // DA IMPLEMENTARE IN FUTURO UTILIZZANDO ECS(FriendshipComponent)
         /*
         // per ogni entità controlliamo se nel 10x10 attorno al suo anchor sono presenti altre entità

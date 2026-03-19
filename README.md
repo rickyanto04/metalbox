@@ -72,11 +72,7 @@ FASE 3: OTTIMIZZAZIONE VISIVA
     modificate (es. se piazzi un sasso). Disegna le entità dinamiche
     sopra questo livello.
 
-Consiglio Critico: Valuta ora se abbandonare JavaFX. JavaFX è eccellente
-per le UI desktop, ma per disegnare decine di migliaia di pixel a 60 FPS
-in un sandbox, librerie basate su OpenGL come LibGDX (Java) ti
-offriranno performance imparagonabili, pur rimanendo nell’ecosistema
-Java.
+    **NON COMPLETATO, per ora con tutte le ottimizzazioni fatte e il LOD non è necessario, inoltre non si raggiungeranno mai 100.000 o 200.000 unità contemporaneamente, nel caso in futuro si debba cambiare si passerà a LibGDX**
 
 FASE 4: MECCANICHE DI GIOCO
 
@@ -101,12 +97,10 @@ FASE 4: MECCANICHE DI GIOCO
 FASE 5: ESPANSIONE MASSIVA
 
 9.  Region System & Multithreading
-    Azione: Dividi la
-    mappa in “Chunk” (es. 32x32). Il multithreading in un gioco ECS è
+    Azione: Dividi la mappa in “Chunk” (es. 32x32). Il multithreading in un gioco ECS è
     potente se aggiorni chunk diversi in thread separati, a patto di
     gestire le entità che attraversano i confini dei chunk.
 
 10. Save System
-    Azione: Serializzare i dati. Con l’ECS,
-    salvare una partita è banale: basta iterare su tutti gli ID delle
+    Azione: Serializzare i dati. Con l’ECS, salvare una partita è banale: basta iterare su tutti gli ID delle
     entità e scrivere i loro componenti in un file JSON o binario.
