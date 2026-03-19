@@ -165,14 +165,16 @@ public class GameView extends StackPane {
             // disegno delle sole entità visibili nelle celle visibili
             EntityManager em = land.getEntityManager();
             for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
-                if (em.isAlive[i] && em.positionComponents[i] != null && em.shapeComponents[i] != null && em.graphicsComponents[i] != null) {
-                    int ax = em.positionComponents[i].x;
-                    int ay = em.positionComponents[i].y;
+                if (em.isAlive[i]) {
+                    int ax = em.posX[i];
+                    int ay = em.posY[i];
 
-                    // margine di tolleranza di 5 celle per le rocce grandi
                     if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
-                        gc.setFill(em.graphicsComponents[i].color);
-                        for (Position relative : em.shapeComponents[i].relativePositions) {
+                        // Recupero dati statici visivi dall'Enum tramite l'ID del tipo
+                        com.ricky.metalbox.model.ECS.EntityType type = com.ricky.metalbox.model.ECS.EntityType.values()[em.type[i]];
+
+                        gc.setFill(type.getColor());
+                        for (Position relative : type.getShape()) {
                             int drawX = ax + relative.getX();
                             int drawY = ay + relative.getY();
                             gc.fillRect(drawX * TILE_SIZE, drawY * TILE_SIZE, TILE_SIZE, TILE_SIZE);

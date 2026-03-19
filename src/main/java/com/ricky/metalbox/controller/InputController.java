@@ -1,14 +1,8 @@
 package com.ricky.metalbox.controller;
 
-import java.util.List;
 import java.util.Random;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
-import com.ricky.metalbox.model.ECS.Components.GraphicsComponent;
-import com.ricky.metalbox.model.ECS.Components.PositionComponent;
-import com.ricky.metalbox.model.ECS.Components.ShapeComponent;
-import com.ricky.metalbox.model.ECS.Components.TargetComponent;
-import com.ricky.metalbox.model.ECS.Components.ThinkingComponent;
 import com.ricky.metalbox.model.Land.AbstractLand;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Utilities.Position;
@@ -56,18 +50,11 @@ public class InputController {
                 // creazione id per il nuovo umano
                 EntityManager em = ((AbstractLand)land).getEntityManager();
                 int entityId = em.createEntity();
-                em.graphicsComponents[entityId] = new GraphicsComponent(javafx.scene.paint.Color.BLACK);
 
-                // unione dei componenti all'id
-                em.positionComponents[entityId] = new PositionComponent(spawnPos.getX(), spawnPos.getY());
-
-                em.shapeComponents[entityId] = new ShapeComponent(List.of(
-                    new Position(0, 0), new Position(2, 0),
-                    new Position(1, 1), new Position(1, 2)
-                ));
-
-                em.targetComponents[entityId] = new TargetComponent();
-                em.thinkingComponents[entityId] = new ThinkingComponent();
+                // Configurazione tramite array primitivi
+                em.type[entityId] = (byte) com.ricky.metalbox.model.ECS.EntityType.HUMAN.ordinal();
+                em.posX[entityId] = spawnPos.getX();
+                em.posY[entityId] = spawnPos.getY();
 
                 ((AbstractLand)land).registerEntity(entityId); //aggiunge umano a land e chunk
             }
@@ -125,15 +112,11 @@ public class InputController {
                         if (attempts < 50) {
                             EntityManager em = land.getEntityManager();
                             int entityId = em.createEntity();
-                            em.graphicsComponents[entityId] = new GraphicsComponent(javafx.scene.paint.Color.BLACK);
 
-                            em.positionComponents[entityId] = new PositionComponent(spawnPos.getX(), spawnPos.getY());
-                            em.shapeComponents[entityId] = new ShapeComponent(List.of(
-                                new Position(0, 0), new Position(2, 0),
-                                new Position(1, 1), new Position(1, 2)
-                            ));
-                            em.targetComponents[entityId] = new TargetComponent();
-                            em.thinkingComponents[entityId] = new ThinkingComponent();
+                            // Configurazione tramite array primitivi
+                            em.type[entityId] = (byte) com.ricky.metalbox.model.ECS.EntityType.HUMAN.ordinal();
+                            em.posX[entityId] = spawnPos.getX();
+                            em.posY[entityId] = spawnPos.getY();
 
                             // Registra l'entità nella mappa e nei chunk
                             ((AbstractLand)land).registerEntity(entityId);
@@ -262,16 +245,9 @@ public class InputController {
         synchronized (this.land) {
             EntityManager em = land.getEntityManager();
 
-            // La forma standard della roccia 3x3
-            List<Position> rockShape = List.of(
-                new Position(0, 0), new Position(1, 0), new Position(2, 0),
-                new Position(0, 1), new Position(1, 1), new Position(2, 1),
-                new Position(0, 2), new Position(1, 2), new Position(2, 2)
-            );
-
             // Controlla se lo spazio per la roccia è libero
             boolean canPlace = true;
-            for (Position relative : rockShape) {
+            for (Position relative : com.ricky.metalbox.model.ECS.EntityType.ROCK.getShape()) {
                 if (!land.isCellFree(new Position(p.getX() + relative.getX(), p.getY() + relative.getY()))) {
                     canPlace = false;
                     break;
@@ -281,17 +257,10 @@ public class InputController {
             // Se è libero, creiamo l'entità Roccia
             if (canPlace) {
                 int entityId = em.createEntity();
+                em.type[entityId] = (byte) com.ricky.metalbox.model.ECS.EntityType.ROCK.ordinal();
+                em.posX[entityId] = p.getX();
+                em.posY[entityId] = p.getY();
 
-                em.positionComponents[entityId] = new PositionComponent(p.getX(), p.getY());
-                em.shapeComponents[entityId] = new ShapeComponent(rockShape);
-
-                // Le diamo un colore grigio
-                em.graphicsComponents[entityId] = new GraphicsComponent(javafx.scene.paint.Color.DARKSLATEGRAY);
-
-                // IMPORTANTE: NON le diamo il TargetComponent né il ThinkingComponent!
-                // Così il MovementController la ignorerà in automatico.
-
-                // La registriamo nella mappa
                 ((com.ricky.metalbox.model.Land.AbstractLand)land).registerEntity(entityId);
                 return true;
             }

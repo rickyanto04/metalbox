@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
+import com.ricky.metalbox.model.ECS.EntityType;
 import com.ricky.metalbox.model.Utilities.Position;
 
 // creata per poter cambiare la generazione della mappa in futuro ovvero poter avere mappe infinite, esagonali, ecc...
@@ -49,9 +50,11 @@ public abstract class AbstractLand implements Land {
     // aggiunta di entità al database
     public void registerEntity(final int entityId) {
         initSpatialGridIfNeeded();
-        Position pos = new Position(entityManager.positionComponents[entityId].x, entityManager.positionComponents[entityId].y);
+        Position pos = new Position(entityManager.posX[entityId], entityManager.posY[entityId]);
 
-        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+        EntityType type = EntityType.values()[entityManager.type[entityId]];
+
+        for(Position relative : type.getShape()) {
             setCellOccupied(new Position(pos.getX() + relative.getX(), pos.getY() + relative.getY()), true);
         }
 
@@ -62,19 +65,17 @@ public abstract class AbstractLand implements Land {
     @Override
     public boolean moveEntity(final int entityId, final Position newPos) {
         initSpatialGridIfNeeded();
-        Position oldPos = new Position(
-            entityManager.positionComponents[entityId].x,
-            entityManager.positionComponents[entityId].y
-        );
+        Position oldPos = new Position(entityManager.posX[entityId], entityManager.posY[entityId]);
+        EntityType type = EntityType.values()[entityManager.type[entityId]];
 
         // libera old positions
-        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+        for(Position relative : type.getShape()) {
             setCellOccupied(new Position(oldPos.getX() + relative.getX(), oldPos.getY() + relative.getY()), false);
         }
 
         // controllo se nuova pos è libera
         boolean canMove = true;
-        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+        for(Position relative : type.getShape()) {
             if (!isCellFree(new Position(newPos.getX() + relative.getX(), newPos.getY() + relative.getY()))) {
                 canMove = false;
                 break;
@@ -83,21 +84,21 @@ public abstract class AbstractLand implements Land {
 
         // rollback per urto contro muro
         if (!canMove) {
-            for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+            for(Position relative : type.getShape()) {
                 setCellOccupied(new Position(oldPos.getX() + relative.getX(), oldPos.getY() + relative.getY()), true);
             }
             return false;
         }
 
         // occupa nuove posizioni e aggiorna dati
-        for(Position relative : entityManager.shapeComponents[entityId].relativePositions) {
+        for(Position relative : type.getShape()) {
             setCellOccupied(new Position(newPos.getX() + relative.getX(), newPos.getY() + relative.getY()), true);
         }
 
-        entityManager.positionComponents[entityId].x = newPos.getX();
-        entityManager.positionComponents[entityId].y = newPos.getY();
+        entityManager.posX[entityId] = newPos.getX();
+        entityManager.posY[entityId] = newPos.getY();
 
-        // aggiornamento spatial grid se l'entità cambia chunk
+        // aggiornamento spatial grid
         int oldChunkIdx = getChunkIndex(oldPos);
         int newChunkIdx = getChunkIndex(newPos);
         if (oldChunkIdx != newChunkIdx) {
