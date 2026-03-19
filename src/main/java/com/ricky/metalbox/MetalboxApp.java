@@ -25,7 +25,7 @@ public class MetalboxApp extends Application{
         // inizializzazione dei controller
         MovementController movementController = new MovementController(land);
         FriendshipController friendshipController = new FriendshipController(land);
-        GameController gameController = new GameController(land, movementController, friendshipController, view::renderMap);
+        GameController gameController = new GameController(movementController, friendshipController, view::renderMap);
         new InputController(land, view, gameController);
 
         // configurazione della finestra

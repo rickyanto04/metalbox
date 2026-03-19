@@ -1,12 +1,9 @@
 package com.ricky.metalbox.controller;
 
-import com.ricky.metalbox.model.Land.Land;
-
 import javafx.animation.AnimationTimer;
 
 public class GameController implements Runnable{
 
-    private final Land land; // synchronization "lock"
     private final MovementController movementController;
     private final FriendshipController friendshipController;
 
@@ -21,8 +18,7 @@ public class GameController implements Runnable{
     // questo è il simulation tick indipendente
     private static final double TICK_RATE = 30.0;
 
-    public GameController(final Land land, final MovementController movementController, final FriendshipController friendshipController, final Runnable viewRepaintCallback) {
-        this.land = land;
+    public GameController(final MovementController movementController, final FriendshipController friendshipController, final Runnable viewRepaintCallback) {
         this.movementController = movementController;
         this.friendshipController = friendshipController;
 
