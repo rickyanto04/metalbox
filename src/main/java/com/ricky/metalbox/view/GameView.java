@@ -12,6 +12,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.TextField;
+import javafx.scene.image.WritableImage;
+import javafx.scene.image.PixelWriter;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -25,6 +27,9 @@ public class GameView extends StackPane {
 
     private final Land land;
     private final Canvas canvas;
+
+    // buffer per terreno statico in memoria
+    private WritableImage backgroundCache;
 
     // variabili telecamera
     private double cameraX = 0;
@@ -76,6 +81,8 @@ public class GameView extends StackPane {
 
         StackPane.setAlignment(buttonContainer, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(buttonContainer, new Insets(20));
+
+        this.prerenderBackground();
     }
 
     // getter e setter per la telecamera
@@ -94,6 +101,38 @@ public class GameView extends StackPane {
     public TextField getSpawnCountField() { return this.spawnCountField; }
     public Button getSpawnMultipleButton() { return this.spawnMultipleButton; }
 
+    // pre-render dell'intera mappa
+    private void prerenderBackground() {
+        int size = this.land.getSize();
+        int imageWidth = size * TILE_SIZE;
+        int imageHeight = size * TILE_SIZE;
+
+        // immagine vuota grande quanto la mappa (ovviamente il x3 delle tile)
+        this.backgroundCache = new WritableImage(imageWidth, imageHeight);
+        PixelWriter pW = this.backgroundCache.getPixelWriter();
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                TerrainType tType = this.land.getTerrainAt(new Position(j, i));
+                Color color;
+
+                switch (tType) {
+                    case WATER: color = Color.CORNFLOWERBLUE; break;
+                    case SAND: color = Color.NAVAJOWHITE; break;
+                    case MOUNTAIN: color = Color.SLATEGRAY; break;
+                    case GRASS:
+                    default: color = Color.LIGHTGREEN; break;
+                }
+
+                for (int di = 0; di < TILE_SIZE; di++) {
+                    for (int dj = 0; dj < TILE_SIZE; dj++) {
+                        pW.setColor(j * TILE_SIZE + dj, i * TILE_SIZE + di, color);
+                    }
+                }
+            }
+        }
+        System.out.println("land pre-rendered succesfully");
+    }
 
     // rendering (Frustum Culling)
     public void renderMap() {
@@ -113,26 +152,15 @@ public class GameView extends StackPane {
             gc.translate(-cameraX, -cameraY);
             gc.scale(zoom, zoom);
 
+            if (this.backgroundCache != null) {
+                gc.drawImage(this.backgroundCache, 0, 0);
+            }
+
             // calcolo del quadrato della mappa attualmente visibile
             int startX = Math.max(0, (int) (cameraX / (TILE_SIZE * zoom)));
             int startY = Math.max(0, (int) (cameraY / (TILE_SIZE * zoom)));
             int endX = Math.min(land.getSize(), (int) ((cameraX + cw) / (TILE_SIZE * zoom)) + 1);
             int endY = Math.min(land.getSize(), (int) ((cameraY + ch) / (TILE_SIZE * zoom)) + 1);
-
-            // disegno delle sole celle visibili
-            for (int y = startY; y < endY; y++) {
-                for (int x = startX; x < endX; x++) {
-                    TerrainType type = land.getTerrainAt(new Position(x, y));
-                    switch (type) {
-                        case WATER: gc.setFill(Color.CORNFLOWERBLUE); break;
-                        case SAND: gc.setFill(Color.NAVAJOWHITE); break;
-                        case MOUNTAIN: gc.setFill(Color.SLATEGRAY); break;
-                        case GRASS:
-                        default: gc.setFill(Color.LIGHTGREEN); break;
-                    }
-                    gc.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                }
-            }
 
             // disegno delle sole entità visibili nelle celle visibili
             EntityManager em = land.getEntityManager();
@@ -152,7 +180,6 @@ public class GameView extends StackPane {
                     }
                 }
             }
-
             gc.restore(); // reset telecamera per frame successivo
         }
     }

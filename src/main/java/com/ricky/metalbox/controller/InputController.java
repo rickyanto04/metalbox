@@ -146,11 +146,30 @@ public class InputController {
             }
         });
 
-        // gestione zoom con rotellina mouse
+        // gestione zoom con rotellina mouse (zoom al verso il cursore)
         this.view.getCanvas().setOnScroll(event -> {
+            double oldZoom = this.view.getZoom();
             double zoomFactor = event.getDeltaY() > 0 ? 1.1 : 0.9;
-            double newZoom = this.view.getZoom() * zoomFactor;
-            this.view.setZoom(Math.max(0.1, Math.min(10.0, newZoom))); // Limita lo zoom
+            double newZoom = Math.max(0.1, Math.min(10.0, oldZoom * zoomFactor));
+
+            if (oldZoom == newZoom) return; // limite massimo o minimo
+
+            // coordinate attuali del cursore
+            double mouseX = event.getX();
+            double mouseY = event.getY();
+
+            // coordinata assoluta nel "mondo"
+            double worldX = (mouseX + this.view.getCameraX()) / oldZoom;
+            double worldY = (mouseY + this.view.getCameraY()) / oldZoom;
+
+            // applico zoom
+            this.view.setZoom(newZoom);
+
+            // sposto la telecamera sotto i pixel dove puntavamo
+            double newCameraX = (worldX * newZoom) - mouseX;
+            double newCameraY = (worldY * newZoom) - mouseY;
+            this.view.setCameraX(newCameraX);
+            this.view.setCameraY(newCameraY);
         });
 
         // gestione click e trascinamento(panning e costruzione)
