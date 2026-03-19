@@ -45,7 +45,7 @@ public class InputController {
                     startX = random.nextInt(this.land.getSize() - 40) + 20;
                     startY = random.nextInt(this.land.getSize() - 40) + 20;
                     spawnPos = new Position(startX, startY);
-                } while (!land.isCellFree(spawnPos));
+                } while (!land.isCellFree(spawnPos.getX(), spawnPos.getY()));
 
                 // creazione id per il nuovo umano
                 EntityManager em = ((AbstractLand)land).getEntityManager();
@@ -106,7 +106,7 @@ public class InputController {
                             startY = random.nextInt(this.land.getSize() - 40) + 20;
                             spawnPos = new Position(startX, startY);
                             attempts++;
-                        } while (!land.isCellFree(spawnPos) && attempts < 50);
+                        } while (!land.isCellFree(spawnPos.getX(), spawnPos.getY()) && attempts < 50);
 
                         // Se ha trovato una cella libera, aggiunge l'umano
                         if (attempts < 50) {
@@ -248,7 +248,8 @@ public class InputController {
             // Controlla se lo spazio per la roccia è libero
             boolean canPlace = true;
             for (Position relative : com.ricky.metalbox.model.ECS.EntityType.ROCK.getShape()) {
-                if (!land.isCellFree(new Position(p.getX() + relative.getX(), p.getY() + relative.getY()))) {
+                Position nPos= new Position(p.getX() + relative.getX(), p.getY() + relative.getY());
+                if (!land.isCellFree(nPos.getX(), nPos.getY())) {
                     canPlace = false;
                     break;
                 }

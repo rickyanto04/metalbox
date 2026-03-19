@@ -64,6 +64,7 @@ public abstract class AbstractLand implements Land {
         this.spatialChunks.get(chunkIdx).add(entityId);
     }
 
+    /*
     @Override
     public boolean moveEntity(final int entityId, final Position newPos) {
         initSpatialGridIfNeeded();
@@ -103,6 +104,51 @@ public abstract class AbstractLand implements Land {
         // aggiornamento spatial grid
         int oldChunkIdx = getChunkIndex(oldPos);
         int newChunkIdx = getChunkIndex(newPos);
+        if (oldChunkIdx != newChunkIdx) {
+            this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
+            this.spatialChunks.get(newChunkIdx).add(entityId);
+        }
+        return true;
+    }
+*/
+
+    @Override
+    public boolean moveEntity(final int entityId, final int newX, final int newY) {
+        initSpatialGridIfNeeded();
+        int oldX = entityManager.posX[entityId];
+        int oldY = entityManager.posY[entityId];
+        EntityType type = EntityType.values()[entityManager.type[entityId]];
+
+        // libera old positions (usiamo le primitive)
+        for(Position relative : type.getShape()) {
+            setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), false);
+        }
+
+        boolean canMove = true;
+        for(Position relative : type.getShape()) {
+            if (!isCellFree(newX + relative.getX(), newY + relative.getY())) {
+                canMove = false;
+                break;
+            }
+        }
+
+        if (!canMove) {
+            for(Position relative : type.getShape()) {
+                setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), true);
+            }
+            return false;
+        }
+
+        for(Position relative : type.getShape()) {
+            setCellOccupied(new Position(newX + relative.getX(), newY + relative.getY()), true);
+        }
+
+        entityManager.posX[entityId] = newX;
+        entityManager.posY[entityId] = newY;
+
+        // aggiornamento spatial grid
+        int oldChunkIdx = getChunkIndex(new Position(oldX, oldY));
+        int newChunkIdx = getChunkIndex(new Position(newX, newY));
         if (oldChunkIdx != newChunkIdx) {
             this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
             this.spatialChunks.get(newChunkIdx).add(entityId);

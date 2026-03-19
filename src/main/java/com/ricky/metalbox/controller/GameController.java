@@ -103,10 +103,7 @@ public class GameController implements Runnable{
 
     //elaborazione della simulazione senza toccare l'interfaccia grafica
     private void tickLogic() {
-        // Nessuno può toccare la mappa finché non finiamo i calcoli
-        synchronized (this.land) {
-            this.movementController.updateMovements();
-            this.friendshipController.updateFriendships();
-        }
+        this.movementController.updateMovements();
+        this.friendshipController.updateFriendships();
     }
 }

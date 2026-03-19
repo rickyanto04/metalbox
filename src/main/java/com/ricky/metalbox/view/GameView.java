@@ -138,61 +138,59 @@ public class GameView extends StackPane {
 
     // rendering (Frustum Culling)
     public void renderMap() {
-        // blocco della mappa durante il disegno per evitare crash se le entità si muovono nel frattempo
-        synchronized (this.land) {
-            GraphicsContext gc = canvas.getGraphicsContext2D();
-            double cw = canvas.getWidth();
-            double ch = canvas.getHeight();
 
-            // sfondo oceano globale
-            gc.clearRect(0, 0, cw, ch);
-            gc.setFill(Color.web("#0F5E9C"));
-            gc.fillRect(0, 0, cw, ch);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        double cw = canvas.getWidth();
+        double ch = canvas.getHeight();
 
-            // posizionamento telecamera e applicazione zoom
-            gc.save();
-            gc.translate(-cameraX, -cameraY);
-            gc.scale(zoom, zoom);
+        // sfondo oceano globale
+        gc.clearRect(0, 0, cw, ch);
+        gc.setFill(Color.web("#0F5E9C"));
+        gc.fillRect(0, 0, cw, ch);
 
-            if (this.backgroundCache != null) {
-                gc.drawImage(this.backgroundCache, 0, 0);
-            }
+        // posizionamento telecamera e applicazione zoom
+        gc.save();
+        gc.translate(-cameraX, -cameraY);
+        gc.scale(zoom, zoom);
 
-            // calcolo del quadrato della mappa attualmente visibile
-            int startX = Math.max(0, (int) (cameraX / (TILE_SIZE * zoom)));
-            int startY = Math.max(0, (int) (cameraY / (TILE_SIZE * zoom)));
-            int endX = Math.min(land.getSize(), (int) ((cameraX + cw) / (TILE_SIZE * zoom)) + 1);
-            int endY = Math.min(land.getSize(), (int) ((cameraY + ch) / (TILE_SIZE * zoom)) + 1);
+        if (this.backgroundCache != null) {
+            gc.drawImage(this.backgroundCache, 0, 0);
+        }
 
-            // calcolo del centro della telecamera e il raggio visibile
-            int centerX = (startX + endX) / 2;
-            int centerY = (startY + endY) / 2;
-            int radius = Math.max((endX - startX), (endY - startY)) / 2 + 1;
+        // calcolo del quadrato della mappa attualmente visibile
+        int startX = Math.max(0, (int) (cameraX / (TILE_SIZE * zoom)));
+        int startY = Math.max(0, (int) (cameraY / (TILE_SIZE * zoom)));
+        int endX = Math.min(land.getSize(), (int) ((cameraX + cw) / (TILE_SIZE * zoom)) + 1);
+        int endY = Math.min(land.getSize(), (int) ((cameraY + ch) / (TILE_SIZE * zoom)) + 1);
 
-            // richiesta allo spatial partitioning delle sole entità potenzialmente visibili
-            List<Integer> visibleEntities = land.getEntitiesNear(new Position(centerX, centerY), radius);
+        // calcolo del centro della telecamera e il raggio visibile
+        int centerX = (startX + endX) / 2;
+        int centerY = (startY + endY) / 2;
+        int radius = Math.max((endX - startX), (endY - startY)) / 2 + 1;
 
-            // disegno delle sole entità visibili
-            EntityManager em = land.getEntityManager();
-            for (int i : visibleEntities) {
-                if (em.isAlive[i]) {
-                    int ax = em.posX[i];
-                    int ay = em.posY[i];
+        // richiesta allo spatial partitioning delle sole entità potenzialmente visibili
+        List<Integer> visibleEntities = land.getEntitiesNear(new Position(centerX, centerY), radius);
+
+        // disegno delle sole entità visibili
+        EntityManager em = land.getEntityManager();
+        for (int i : visibleEntities) {
+            if (em.isAlive[i]) {
+                int ax = em.posX[i];
+                int ay = em.posY[i];
 
                     if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
-                        // Recupero dati statici visivi dall'Enum tramite l'ID del tipo
-                        com.ricky.metalbox.model.ECS.EntityType type = com.ricky.metalbox.model.ECS.EntityType.values()[em.type[i]];
+                    // Recupero dati statici visivi dall'Enum tramite l'ID del tipo
+                    com.ricky.metalbox.model.ECS.EntityType type = com.ricky.metalbox.model.ECS.EntityType.values()[em.type[i]];
 
-                        gc.setFill(type.getColor());
-                        for (Position relative : type.getShape()) {
-                            int drawX = ax + relative.getX();
-                            int drawY = ay + relative.getY();
-                            gc.fillRect(drawX * TILE_SIZE, drawY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        }
+                    gc.setFill(type.getColor());
+                    for (Position relative : type.getShape()) {
+                        int drawX = ax + relative.getX();
+                        int drawY = ay + relative.getY();
+                        gc.fillRect(drawX * TILE_SIZE, drawY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     }
                 }
             }
-            gc.restore(); // reset telecamera per frame successivo
         }
+        gc.restore(); // reset telecamera per frame successivo
     }
 }

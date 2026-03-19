@@ -10,12 +10,16 @@ public interface Land {
     // espone il database dell'ecs system
     EntityManager getEntityManager();
 
-    boolean moveEntity(int entityId, Position anchor);
+    //boolean moveEntity(int entityId, Position anchor);
+
+    boolean moveEntity(int entityId, int newX, int newY);
 
     // metodo per spatial partitioning
     List<Integer> getEntitiesNear(Position center, int radius);
 
-    boolean isCellFree(Position p);
+    //boolean isCellFree(Position p);
+
+    boolean isCellFree(int x, int y);
 
     int getSize();
 

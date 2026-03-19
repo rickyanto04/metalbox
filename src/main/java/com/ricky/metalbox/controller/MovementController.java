@@ -43,18 +43,31 @@ public class MovementController {
                     em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(96) + 5;
                 }
 
-                Position target;
-                do {
-                    target = new Position(ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8, ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8);
-                } while (!this.land.isCellFree(target));
+                int tX = 0, tY = 0;
+                boolean found = false;
+                int attempts = 0;
 
-                em.targetX[id] = target.getX();
-                em.targetY[id] = target.getY();
-                em.hasTarget[id] = true;
+                // tenta massimo 5 volte per non bloccare la cpu
+                while (attempts < 5 && !found) {
+                    tX = ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8;
+                    tY = ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8;
+                    if (this.land.isCellFree(tX, tY)) {
+                        found = true;
+                    }
+                    attempts++;
+                }
 
-                if (em.ticksRemaining[id] > 0) {
+                if (found) {
+                    em.targetX[id] = tX;
+                    em.targetY[id] = tY;
+                    em.hasTarget[id] = true;
+                } else {
+                    // se la mappa è troppo piena, riposa e riprova più tardi
+                    em.ticksRemaining[id] = 15;
                     continue;
                 }
+
+                if (em.ticksRemaining[id] > 0) continue;
             }
 
             int targetX = em.targetX[id];
@@ -64,12 +77,12 @@ public class MovementController {
             int deltaY = Integer.compare(targetY, currentY);
 
             if (deltaX != 0 || deltaY != 0) {
-                Position nextStep = new Position(currentX + deltaX, currentY + deltaY);
-                boolean movedSuccessfully = this.land.moveEntity(id, nextStep);
+                // zero allocazione, chiamata a metodo primitivo
+                boolean movedSuccessfully = this.land.moveEntity(id, currentX + deltaX, currentY + deltaY);
 
                 if (!movedSuccessfully) {
-                    em.hasTarget[id] = false; // Reset target
-                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2; // Confusione
+                    em.hasTarget[id] = false;
+                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2;
                 }
             }
         }
