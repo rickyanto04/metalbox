@@ -25,7 +25,7 @@ public class EntityManager {
         //tutto empty
     }
 
-    public int createEntity() {
+    public synchronized int createEntity() {
         if (nextEntityId >= MAX_ENTITIES) {
             throw new RuntimeException("max entities limit reached");
         }
@@ -37,7 +37,7 @@ public class EntityManager {
         return id;
     }
 
-    public void destroyEntity(final int id) {
+    public synchronized void destroyEntity(final int id) {
         isAlive[id] = false;
     }
 }

@@ -1,8 +1,7 @@
 package com.ricky.metalbox.view;
 
-import java.util.List;
-
 import com.ricky.metalbox.model.ECS.EntityManager;
+import com.ricky.metalbox.model.ECS.EntityType;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Terrain.TerrainType;
 import com.ricky.metalbox.model.Utilities.Position;
@@ -136,7 +135,7 @@ public class GameView extends StackPane {
         System.out.println("land pre-rendered succesfully");
     }
 
-    // rendering (Frustum Culling)
+    // rendering (Frustum Culling + Level of Detail)
     public void renderMap() {
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -163,26 +162,28 @@ public class GameView extends StackPane {
         int endX = Math.min(land.getSize(), (int) ((cameraX + cw) / (TILE_SIZE * zoom)) + 1);
         int endY = Math.min(land.getSize(), (int) ((cameraY + ch) / (TILE_SIZE * zoom)) + 1);
 
-        // calcolo del centro della telecamera e il raggio visibile
-        int centerX = (startX + endX) / 2;
-        int centerY = (startY + endY) / 2;
-        int radius = Math.max((endX - startX), (endY - startY)) / 2 + 1;
-
-        // richiesta allo spatial partitioning delle sole entità potenzialmente visibili
-        List<Integer> visibleEntities = land.getEntitiesNear(new Position(centerX, centerY), radius);
-
         // disegno delle sole entità visibili
         EntityManager em = land.getEntityManager();
-        for (int i : visibleEntities) {
-            if (em.isAlive[i]) {
-                int ax = em.posX[i];
-                int ay = em.posY[i];
 
-                    if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
-                    // Recupero dati statici visivi dall'Enum tramite l'ID del tipo
-                    com.ricky.metalbox.model.ECS.EntityType type = com.ricky.metalbox.model.ECS.EntityType.values()[em.type[i]];
+        // soglia LOD: se lo zoom è inferiore a 0.5, la telecamera è lontana
+        boolean isZoomedOut = zoom < 0.5;
 
-                    gc.setFill(type.getColor());
+        for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
+            if (!em.isAlive[i]) continue;
+
+            int ax = em.posX[i];
+            int ay = em.posY[i];
+
+            // Frustum Culling
+            if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
+                EntityType type = EntityType.values()[em.type[i]];
+                gc.setFill(type.getColor());
+
+                // LOD attivo
+                if (isZoomedOut) {
+                    gc.fillRect(ax * TILE_SIZE, ay * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 2);
+                } else {
+                    // LOD disattivato
                     for (Position relative : type.getShape()) {
                         int drawX = ax + relative.getX();
                         int drawY = ay + relative.getY();

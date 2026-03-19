@@ -3,7 +3,7 @@ package com.ricky.metalbox.model.Land;
 import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.ECS.EntityType;
@@ -37,7 +37,7 @@ public abstract class AbstractLand implements Land {
 
             this.spatialChunks = new ArrayList<>(totalChunks);
             for (int i = 0; i < totalChunks; i++) {
-                this.spatialChunks.add(new HashSet<>());
+                this.spatialChunks.add(ConcurrentHashMap.newKeySet());
             }
         }
     }

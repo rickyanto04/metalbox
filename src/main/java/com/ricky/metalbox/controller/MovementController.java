@@ -4,7 +4,6 @@ import java.util.concurrent.ThreadLocalRandom; // più veloce del campo random c
 
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.Land.Land;
-import com.ricky.metalbox.model.Utilities.Position;
 
 public class MovementController {
 
