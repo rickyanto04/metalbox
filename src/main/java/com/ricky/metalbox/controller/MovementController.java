@@ -1,6 +1,6 @@
 package com.ricky.metalbox.controller;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom; // più veloce del campo random condiviso
 
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.Land.Land;
@@ -9,11 +9,9 @@ import com.ricky.metalbox.model.Utilities.Position;
 public class MovementController {
 
     private final Land land;
-    private final Random random;
 
     public MovementController(final Land land) {
         this.land = land;
-        this.random = new Random();
     }
 
     public void updateMovements() {
@@ -42,12 +40,12 @@ public class MovementController {
             if (!hasTarget || (currentX == em.targetX[id] && currentY == em.targetY[id])) {
 
                 if (hasTarget) { // era arrivato a destinazione
-                    em.ticksRemaining[id] = this.random.nextInt(96) + 5;
+                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(96) + 5;
                 }
 
                 Position target;
                 do {
-                    target = new Position(this.random.nextInt((this.land.getSize() - 10)) + 8, this.random.nextInt((this.land.getSize() - 10)) + 8);
+                    target = new Position(ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8, ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8);
                 } while (!this.land.isCellFree(target));
 
                 em.targetX[id] = target.getX();
@@ -71,7 +69,7 @@ public class MovementController {
 
                 if (!movedSuccessfully) {
                     em.hasTarget[id] = false; // Reset target
-                    em.ticksRemaining[id] = this.random.nextInt(5) + 2; // Confusione
+                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2; // Confusione
                 }
             }
         }

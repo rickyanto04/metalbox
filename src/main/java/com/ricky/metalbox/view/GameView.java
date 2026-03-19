@@ -172,7 +172,7 @@ public class GameView extends StackPane {
             // richiesta allo spatial partitioning delle sole entità potenzialmente visibili
             List<Integer> visibleEntities = land.getEntitiesNear(new Position(centerX, centerY), radius);
 
-            // disegno delle sole entità visibili nelle celle visibili
+            // disegno delle sole entità visibili
             EntityManager em = land.getEntityManager();
             for (int i : visibleEntities) {
                 if (em.isAlive[i]) {
