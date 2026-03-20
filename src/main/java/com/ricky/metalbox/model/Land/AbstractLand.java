@@ -64,54 +64,6 @@ public abstract class AbstractLand implements Land {
         this.spatialChunks.get(chunkIdx).add(entityId);
     }
 
-    /*
-    @Override
-    public boolean moveEntity(final int entityId, final Position newPos) {
-        initSpatialGridIfNeeded();
-        Position oldPos = new Position(entityManager.posX[entityId], entityManager.posY[entityId]);
-        EntityType type = EntityType.values()[entityManager.type[entityId]];
-
-        // libera old positions
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(oldPos.getX() + relative.getX(), oldPos.getY() + relative.getY()), false);
-        }
-
-        // controllo se nuova pos è libera
-        boolean canMove = true;
-        for(Position relative : type.getShape()) {
-            if (!isCellFree(new Position(newPos.getX() + relative.getX(), newPos.getY() + relative.getY()))) {
-                canMove = false;
-                break;
-            }
-        }
-
-        // rollback per urto contro muro
-        if (!canMove) {
-            for(Position relative : type.getShape()) {
-                setCellOccupied(new Position(oldPos.getX() + relative.getX(), oldPos.getY() + relative.getY()), true);
-            }
-            return false;
-        }
-
-        // occupa nuove posizioni e aggiorna dati
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(newPos.getX() + relative.getX(), newPos.getY() + relative.getY()), true);
-        }
-
-        entityManager.posX[entityId] = newPos.getX();
-        entityManager.posY[entityId] = newPos.getY();
-
-        // aggiornamento spatial grid
-        int oldChunkIdx = getChunkIndex(oldPos);
-        int newChunkIdx = getChunkIndex(newPos);
-        if (oldChunkIdx != newChunkIdx) {
-            this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
-            this.spatialChunks.get(newChunkIdx).add(entityId);
-        }
-        return true;
-    }
-*/
-
     @Override
     public boolean moveEntity(final int entityId, final int newX, final int newY) {
         initSpatialGridIfNeeded();

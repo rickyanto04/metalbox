@@ -34,22 +34,6 @@ public class LandImpl extends AbstractLand {
         return (y * landSize) + x;
     }
 
-    /*
-    @Override
-    public boolean isCellFree(final Position p) {
-        if (isPositionValid(p)) {
-            int index = getIndex(p.getY(), p.getX());
-
-            boolean isOccupied = this.occupiedGrid[index];
-            //controlliamo col byte salvato per capire se è acqua
-            boolean isWater = this.terrainGrid[index] == (byte) TerrainType.WATER.ordinal();
-
-            return !isOccupied && !isWater;
-        }
-        return false;
-    }
-        */
-
     @Override
     public boolean isCellFree(int x, int y) {
         if (x >= 0 && x < landSize && y >= 0 && y < landSize) {
