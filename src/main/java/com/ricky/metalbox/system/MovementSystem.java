@@ -41,17 +41,24 @@ public class MovementSystem implements EntitySystem{
             if (!hasTarget || (currentX == em.targetX[id] && currentY == em.targetY[id])) {
 
                 if (hasTarget) { // era arrivato a destinazione
-                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(96) + 5;
+                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(60) + 15;
                 }
 
+                // FASE WANDERING LOCALE, raggio 20 celle
+                int radius = 20;
                 int tX = 0, tY = 0;
                 boolean found = false;
                 int attempts = 0;
 
                 // tenta massimo 5 volte per non bloccare la cpu
                 while (attempts < 5 && !found) {
-                    tX = ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8;
-                    tY = ThreadLocalRandom.current().nextInt((this.land.getSize() - 10)) + 8;
+                    // distribuzione uniforme in un bounding box locale, ristretta ai limiti della mappa
+                    int offsetX = ThreadLocalRandom.current().nextInt(-radius, radius + 1);
+                    int offsetY = ThreadLocalRandom.current().nextInt(-radius, radius + 1);
+
+                    tX = Math.max(8, Math.min(this.land.getSize() - 10, currentX + offsetX));
+                    tY = Math.max(8, Math.min(this.land.getSize() - 10, currentY + offsetY));
+
                     if (this.land.isCellFree(tX, tY)) {
                         found = true;
                     }
@@ -67,8 +74,6 @@ public class MovementSystem implements EntitySystem{
                     em.ticksRemaining[id] = 15;
                     continue;
                 }
-
-                if (em.ticksRemaining[id] > 0) continue;
             }
 
             int targetX = em.targetX[id];
@@ -78,12 +83,27 @@ public class MovementSystem implements EntitySystem{
             int deltaY = Integer.compare(targetY, currentY);
 
             if (deltaX != 0 || deltaY != 0) {
-                // zero allocazione, chiamata a metodo primitivo
-                boolean movedSuccessfully = this.land.moveEntity(id, currentX + deltaX, currentY + deltaY);
+                // movimento ideale (diagonale/dritto)
+                boolean moved = this.land.moveEntity(id, currentX + deltaX, currentY + deltaY);
 
-                if (!movedSuccessfully) {
-                    em.hasTarget[id] = false;
-                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2;
+                if (!moved) {
+                    boolean movedX = false;
+                    boolean movedY = false;
+
+                    // prova solo X se ci stiamo muovendo in diagonale
+                    if (deltaX != 0) {
+                        movedX = this.land.moveEntity(id, currentX + deltaX, currentY);
+                    }
+                    // se fallisce anche X, prova solo Y
+                    if (!movedX && deltaY != 0) {
+                        movedY = this.land.moveEntity(id, currentX, currentY + deltaY);
+                    }
+
+                    // se tutti i tentativi falliscono, resetta il target
+                    if (!movedX && !movedY) {
+                        em.hasTarget[id] = false;
+                        em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2;
+                    }
                 }
             }
         }
