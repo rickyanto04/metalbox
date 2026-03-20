@@ -1,6 +1,6 @@
 # METALBOX
 
-FASE 1: FONDAMENTA DATI E STRUTTURA
+### FASE 1: FONDAMENTA DATI E STRUTTURA
 
 1.  Ristrutturazione della Grid del Mondo
     Azione:
@@ -16,7 +16,7 @@ FASE 1: FONDAMENTA DATI E STRUTTURA
 
     **COMPLETATO: Abbiamo isolato la fisica del gioco su un thread dedicato a 30 TPS costanti, lasciando JavaFX libero di renderizzare l'interfaccia a 60 FPS senza mai bloccarsi. Al momento è rimasto un solo blocco (synchronized) in InputController che avevo predisposto per evitare crash, da capire se si può eliminare o meno.**
 
-###FASE 2: ARCHITETTURA PER LA SCALABILITÀ (CRUCIALE)
+### FASE 2: ARCHITETTURA PER LA SCALABILITÀ (CRUCIALE)
 
 3.  Spatial Partitioning
     **COMPLETATO, predisposto e pronto all'uso per quando verrà implementato il friendship system, entità già registrate nei chunk**
@@ -24,18 +24,18 @@ FASE 1: FONDAMENTA DATI E STRUTTURA
 4.  Passaggio a ECS - Entity Component System
     **COMPLETATO, manca il friendship system ma andrà cambiato del tutto quindi lo bypassiamo**
 
-    4.1. FRUSTUM CULLING
-    **COMPLETATO, aggiunta di motore grafico con telecamera per poter renderizzare solamente ciò che viene visto direttamente da essa**
+        4.1. FRUSTUM CULLING
+        **COMPLETATO, aggiunta di motore grafico con telecamera per poter renderizzare solamente ciò che viene visto direttamente da essa**
 
-    4.1. LOD ("Level of Detail")
-    **COMPLETATO, ora 200000 entità causano un lag minimo e sopportabile quando il dezoom è al minimo**
+        4.1. LOD ("Level of Detail")
+        **COMPLETATO, ora 200000 entità causano un lag minimo e sopportabile quando il dezoom è al minimo**
 
-###FASE 3: OTTIMIZZAZIONE VISIVA
+### FASE 3: OTTIMIZZAZIONE VISIVA
 
 5.  Rendering Avanzato / Cambio Libreria Grafica
     **NON COMPLETATO (al momento NON NECESSARIO), per ora con tutte le ottimizzazioni fatte e il LOD non è necessario, inoltre non si raggiungeranno mai 100.000 o 200.000 unità contemporaneamente, nel caso in futuro si debba cambiare si passerà a LibGDX**
 
-###FASE 4: MECCANICHE DI GIOCO
+### FASE 4: MECCANICHE DI GIOCO
 
 6.  Entity Systems e AI
     Azione: Ora che hai ECS e Spatial Partitioning, puoi creare logiche complesse
@@ -54,7 +54,7 @@ FASE 1: FONDAMENTA DATI E STRUTTURA
     quell’evento.
     **TODO**
 
-###FASE 5: ESPANSIONE MASSIVA
+### FASE 5: ESPANSIONE MASSIVA
 
 9.  Region System & Multithreading
     **NON COMPLETATO, al momento c'è divisione thread logica e thread javafx e mondo diviso in chunk 32x32 ma non ci sono thread diversi per ogni chunk**
