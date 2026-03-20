@@ -4,7 +4,6 @@ import com.ricky.metalbox.controller.GameController;
 import com.ricky.metalbox.controller.InputController;
 import com.ricky.metalbox.model.Land.Land;
 import com.ricky.metalbox.model.Land.LandImpl;
-import com.ricky.metalbox.system.FriendshipSystem;
 import com.ricky.metalbox.system.MovementSystem;
 import com.ricky.metalbox.view.GameView;
 
@@ -25,7 +24,6 @@ public class MetalboxApp extends Application{
         // inizializzazione dell'architettura ECS
         GameController gameController = new GameController(view::renderMap);
         gameController.addSystem(new MovementSystem(land));
-        gameController.addSystem(new FriendshipSystem(land));
 
         new InputController(land, view, gameController);
 
