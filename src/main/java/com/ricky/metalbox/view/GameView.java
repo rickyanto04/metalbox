@@ -13,6 +13,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+import javafx.scene.text.Font;
 import javafx.scene.image.WritableImage;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.layout.HBox;
@@ -36,6 +38,12 @@ public class GameView extends StackPane {
     private double cameraX = 0;
     private double cameraY = 0;
     private double zoom = 1.0;
+
+    // variabili statistiche + FPS
+    private Label statsLabel;
+    private long lastFpsTime = 0;
+    private int frameCount = 0;
+    private int currentFps = 0;
 
     // bottoni come variabili di classe
     private final Button pauseButton;
@@ -77,9 +85,28 @@ public class GameView extends StackPane {
         buttonContainer.getChildren().addAll(pauseButton, addHumanButton, multiSpawnContainer, addRockButton);
         buttonContainer.setPickOnBounds(false);
 
-        this.setStyle("-fx-background-color: #0F5E9C;");
-        this.getChildren().addAll(canvasContainer, buttonContainer);
+        // INIZIO CONFIGURAZIONE STATISTICHE
+        this.statsLabel = new Label("FPS: 0\n(alive: 0 | dead: 0)");
+        this.statsLabel.setStyle(
+            "-fx-background-color: rgba(0, 0, 0, 0.7); " +
+            "-fx-text-fill: white; " +
+            "-fx-padding: 10px; " +
+            "-fx-font-family: monospace; " +
+            "-fx-font-size: 14px; " +
+            "-fx-background-radius: 5px;"
+        );
+        this.statsLabel.setMouseTransparent(true);
 
+        VBox statsContainer = new VBox(this.statsLabel);
+        statsContainer.setAlignment(Pos.TOP_RIGHT);
+        statsContainer.setPickOnBounds(false);
+        // FINE CONFIGURAZIONE STATISTICHE
+
+        this.setStyle("-fx-background-color: #0F5E9C;");
+        this.getChildren().addAll(canvasContainer, buttonContainer, statsContainer);
+
+        StackPane.setAlignment(statsContainer, Pos.TOP_RIGHT);
+        StackPane.setMargin(statsContainer, new Insets(20));
         StackPane.setAlignment(buttonContainer, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(buttonContainer, new Insets(20));
 
@@ -138,6 +165,16 @@ public class GameView extends StackPane {
     // rendering (Frustum Culling + Level of Detail)
     public void renderMap() {
 
+        // INIZIO CALCOLO FPS
+        long now = System.nanoTime();
+        frameCount++;
+        if (now - lastFpsTime >= 1_000_000_000L) { //1 secondo
+            currentFps = frameCount;
+            frameCount = 0;
+            lastFpsTime = now;
+        }
+        // FINE CALCOLO FPS
+
         GraphicsContext gc = canvas.getGraphicsContext2D();
         double cw = canvas.getWidth();
         double ch = canvas.getHeight();
@@ -193,5 +230,9 @@ public class GameView extends StackPane {
             }
         }
         gc.restore(); // reset telecamera per frame successivo
+
+        //aggiornamento ui stats
+        this.statsLabel.setText(String.format("FPS: %d\n(alive: %d | dead: %d)",
+            currentFps, em.getAliveCount(), em.getDeadCount()));
     }
 }

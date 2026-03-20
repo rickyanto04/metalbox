@@ -25,4 +25,6 @@ public interface Land {
 
     TerrainType getTerrainAt(Position p);
 
+    void removeEntity(int entityId);
+
 }

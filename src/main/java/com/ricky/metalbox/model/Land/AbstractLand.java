@@ -22,7 +22,7 @@ public abstract class AbstractLand implements Land {
 
     @Override public EntityManager getEntityManager() { return this.entityManager; }
 
-    // ---> METODI ASTRATTI che la classe matrice (LandImpl) dovrà definire
+    // METODI ASTRATTI che la classe matrice (LandImpl) dovrà definire
     protected abstract void setCellOccupied(Position p, boolean occupied);
 
     // Essendo l'interfaccia Land a richiedere isCellFree, qui la implementerà il figlio,
@@ -127,5 +127,25 @@ public abstract class AbstractLand implements Land {
             }
         }
         return nearbyEntities;
+    }
+
+    @Override
+    public void removeEntity(final int entityId) {
+        initSpatialGridIfNeeded();
+        int currentX = entityManager.posX[entityId];
+        int currentY = entityManager.posY[entityId];
+        EntityType type = EntityType.values()[entityManager.type[entityId]];
+
+        // 1. libera la griglia delle collisioni fisiche
+        for(Position relative : type.getShape()) {
+            setCellOccupied(new Position(currentX + relative.getX(), currentY + relative.getY()), false);
+        }
+
+        // 2. rimuovi l'entità dal chunk dello Spatial Partitioning
+        int chunkIdx = getChunkIndex(new Position(currentX, currentY));
+        this.spatialChunks.get(chunkIdx).remove(Integer.valueOf(entityId));
+
+        // 3. marca l'entità come morta nell'Entity Manager
+        entityManager.destroyEntity(entityId);
     }
 }

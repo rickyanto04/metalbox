@@ -1,6 +1,7 @@
 package com.ricky.metalbox.controller;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.Land.AbstractLand;
@@ -55,6 +56,12 @@ public class InputController {
                 em.type[entityId] = (byte) com.ricky.metalbox.model.ECS.EntityType.HUMAN.ordinal();
                 em.posX[entityId] = spawnPos.getX();
                 em.posY[entityId] = spawnPos.getY();
+
+                // genera un'età gaussiana (media 85, deviazione standard 10) e la restringe tra 65 e 105
+                int lifespanYears = (int) Math.max(65, Math.min(105, 85 + ThreadLocalRandom.current().nextGaussian() * 10));
+
+                // 1 anno = 100 ticks (puoi alzare questo valore se vuoi che vivano di più)
+                em.maxLifespanInTicks[entityId] = lifespanYears * 100;
 
                 ((AbstractLand)land).registerEntity(entityId); //aggiunge umano a land e chunk
             }
@@ -117,6 +124,9 @@ public class InputController {
                             em.type[entityId] = (byte) com.ricky.metalbox.model.ECS.EntityType.HUMAN.ordinal();
                             em.posX[entityId] = spawnPos.getX();
                             em.posY[entityId] = spawnPos.getY();
+
+                            int lifespanYears = (int) Math.max(65, Math.min(105, 85 + ThreadLocalRandom.current().nextGaussian() * 10));
+                            em.maxLifespanInTicks[entityId] = lifespanYears * 100;
 
                             // Registra l'entità nella mappa e nei chunk
                             ((AbstractLand)land).registerEntity(entityId);

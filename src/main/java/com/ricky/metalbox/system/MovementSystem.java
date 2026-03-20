@@ -28,8 +28,8 @@ public class MovementSystem implements EntitySystem{
             int id = i;
 
             // gestione thinking time
-            if (em.ticksRemaining[id] > 0) {
-                em.ticksRemaining[id]--;
+            if (em.thinkingTicksRemaining[id] > 0) {
+                em.thinkingTicksRemaining[id]--;
                 continue;
             }
 
@@ -41,7 +41,7 @@ public class MovementSystem implements EntitySystem{
             if (!hasTarget || (currentX == em.targetX[id] && currentY == em.targetY[id])) {
 
                 if (hasTarget) { // era arrivato a destinazione
-                    em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(60) + 15;
+                    em.thinkingTicksRemaining[id] = ThreadLocalRandom.current().nextInt(60) + 15;
                 }
 
                 // FASE WANDERING LOCALE, raggio 20 celle
@@ -71,7 +71,7 @@ public class MovementSystem implements EntitySystem{
                     em.hasTarget[id] = true;
                 } else {
                     // se la mappa è troppo piena, riposa e riprova più tardi
-                    em.ticksRemaining[id] = 15;
+                    em.thinkingTicksRemaining[id] = 15;
                     continue;
                 }
             }
@@ -102,7 +102,7 @@ public class MovementSystem implements EntitySystem{
                     // se tutti i tentativi falliscono, resetta il target
                     if (!movedX && !movedY) {
                         em.hasTarget[id] = false;
-                        em.ticksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2;
+                        em.thinkingTicksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2;
                     }
                 }
             }
