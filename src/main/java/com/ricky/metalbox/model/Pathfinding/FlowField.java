@@ -79,17 +79,20 @@ public class FlowField {
         // CALCOLO INTEGRATION FIELD
         while (head < tail) {
             int currentIdx = queue[head++];
-            int cx = currentIdx % size;
+            int cx = currentIdx % size; // Coordinata X attuale
 
             for (int offset : cardinalOffsets) {
+                // evitiamo wrap-around orizzontale usando cx (NIENTE DIVISIONI)
+                if (offset == -1 && cx == 0) continue; // Muro invisibile a sinistra
+                if (offset == 1 && cx == size - 1) continue; // Muro invisibile a destra
+
                 int neighborIdx = currentIdx + offset;
 
-                // controlli di validità sui bordi array 1D
+                // evitiamo wrap-around verticale (fuori dall'array)
                 if (neighborIdx < 0 || neighborIdx >= totalCells) continue;
-                if ((offset == -1 || offset == 1) && (neighborIdx / size != currentIdx / size)) continue;
 
-                int cost = costField[neighborIdx] & 0xFF; // unsigned byte
-                if (cost == 255) continue;
+                int cost = costField[neighborIdx] & 0xFF; // Unsigned byte
+                if (cost == 255) continue; // Ostacolo insormontabile
 
                 int newCost = integrationField[currentIdx] + cost;
                 if (newCost < integrationField[neighborIdx]) {
