@@ -41,6 +41,9 @@
         5.1. Motore grafico e telecamera
         **COMPLETATO, fixato il panning per impedire allo user di perdere la mappa**
 
+        5.2. Byte Injection dei colori in Screen Space
+        **COMPLETATO**
+
 ### FASE 4: MECCANICHE DI GIOCO
 
 6.  Entity Systems e AI
