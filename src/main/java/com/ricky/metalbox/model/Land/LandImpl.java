@@ -38,7 +38,11 @@ public class LandImpl extends AbstractLand {
     public boolean isCellFree(int x, int y) {
         if (x >= 0 && x < landSize && y >= 0 && y < landSize) {
             int index = getIndex(y, x);
-            return !this.occupiedGrid[index] && this.terrainGrid[index] != (byte) TerrainType.WATER.ordinal();
+            byte t = this.terrainGrid[index];
+
+            return !this.occupiedGrid[index]
+                   && t != (byte) TerrainType.WATER.ordinal()
+                   && t != (byte) TerrainType.ROCK.ordinal();
         }
         return false;
     }
@@ -70,5 +74,12 @@ public class LandImpl extends AbstractLand {
             return TerrainType.values()[terrainID]; // conversione
         }
         return TerrainType.WATER; // Fallback di sicurezza
+    }
+
+    @Override
+    public void setTerrainAt(int x, int y, TerrainType type) {
+        if (x >= 0 && x < landSize && y >= 0 && y < landSize) {
+            this.terrainGrid[getIndex(y, x)] = (byte) type.ordinal();
+        }
     }
 }

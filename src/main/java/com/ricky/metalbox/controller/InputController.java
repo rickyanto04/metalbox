@@ -6,6 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import com.ricky.metalbox.model.ECS.EntityManager;
 import com.ricky.metalbox.model.Land.AbstractLand;
 import com.ricky.metalbox.model.Land.Land;
+import com.ricky.metalbox.model.Terrain.TerrainType;
 import com.ricky.metalbox.model.Utilities.Position;
 import com.ricky.metalbox.view.GameView;
 
@@ -208,7 +209,7 @@ public class InputController {
 
         if (event.getEventType() == MouseEvent.MOUSE_PRESSED) {
             lastDragPos = currentPos;
-            tryPlaceRock(currentPos);
+            applyBrush(currentPos);
         } else if (event.getEventType() == MouseEvent.MOUSE_DRAGGED) {
             if (lastDragPos != null) drawLineOfRocks(lastDragPos, currentPos);
             lastDragPos = currentPos;
@@ -217,10 +218,32 @@ public class InputController {
         }
     }
 
+    private void applyBrush(Position p) {
+        // leggiamo la grandezza del pennello dallo slider
+        int radius = (int) this.view.getBrushSizeSlider().getValue();
+        int cx = p.getX();
+        int cy = p.getY();
+
+        // ciclo su un box e applico il teorema di Pitagora per tagliare gli angoli e fare un cerchio
+        for (int y = cy - radius; y <= cy + radius; y++) {
+            for (int x = cx - radius; x <= cx + radius; x++) {
+                // formula cerchio
+                if ((x - cx) * (x - cx) + (y - cy) * (y - cy) <= radius * radius) {
+                    // controllo bordi
+                    if (x >= 0 && x < land.getSize() && y >= 0 && y < land.getSize()) {
+                        // sovrascrive solo se la cella è vuota (non calpesta gli umani)
+                        if (land.isCellFree(x, y)) {
+                            land.setTerrainAt(x, y, TerrainType.ROCK);
+                            view.drawTerrainPixelCache(x, y, TerrainType.ROCK);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // Algoritmo di Bresenham (per interpolazione della linea)
-    private boolean drawLineOfRocks(Position start, Position end) {
-        boolean anyRockPlaced = false;
+    private void drawLineOfRocks(Position start, Position end) {
         int x0 = start.getX();
         int y0 = start.getY();
         int x1 = end.getX();
@@ -233,8 +256,8 @@ public class InputController {
         int err = dx - dy;
 
         while (true) {
-            boolean placed = tryPlaceRock(new Position(x0, y0));
-            if (placed) anyRockPlaced = true;
+            // ad ogni passo della linea stampo un cerchio con il pennello
+            applyBrush(new Position(x0, y0));
 
             if (x0 == x1 && y0 == y1) break;
             int e2 = 2 * err;
@@ -247,35 +270,6 @@ public class InputController {
                 y0 += sy;
             }
         }
-        return anyRockPlaced;
     }
 
-    // restituisce true con roccia piazzata e non chiama rendermap internamente
-    private boolean tryPlaceRock(Position p) {
-        synchronized (this.land) {
-            EntityManager em = land.getEntityManager();
-
-            // Controlla se lo spazio per la roccia è libero
-            boolean canPlace = true;
-            for (Position relative : com.ricky.metalbox.model.ECS.EntityType.ROCK.getShape()) {
-                Position nPos= new Position(p.getX() + relative.getX(), p.getY() + relative.getY());
-                if (!land.isCellFree(nPos.getX(), nPos.getY())) {
-                    canPlace = false;
-                    break;
-                }
-            }
-
-            // Se è libero, creiamo l'entità Roccia
-            if (canPlace) {
-                int entityId = em.createEntity();
-                em.type[entityId] = (byte) com.ricky.metalbox.model.ECS.EntityType.ROCK.ordinal();
-                em.posX[entityId] = p.getX();
-                em.posY[entityId] = p.getY();
-
-                ((com.ricky.metalbox.model.Land.AbstractLand)land).registerEntity(entityId);
-                return true;
-            }
-            return false;
-        }
-    }
 }

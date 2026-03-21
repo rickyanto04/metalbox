@@ -14,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.text.Font;
 import javafx.scene.image.WritableImage;
 import javafx.scene.image.PixelWriter;
@@ -52,6 +53,9 @@ public class GameView extends StackPane {
     private final TextField spawnCountField;
     private final Button spawnMultipleButton;
 
+    // slider come variabili di classe
+    private final Slider brushSizeSlider;
+
     public GameView(Land land) {
         this.land = land;
         this.canvas = new Canvas(800, 600);
@@ -69,6 +73,14 @@ public class GameView extends StackPane {
         this.addRockButton = new ToggleButton("build rock");
         this.addRockButton.setStyle("-fx-opacity: 0.8; -fx-padding: 10px 20px; -fx-cursor: hand; -fx-background-color: lightgray; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 
+        this.brushSizeSlider = new Slider(1, 15, 3);
+        this.brushSizeSlider.setShowTickMarks(true);
+        this.brushSizeSlider.setPrefWidth(100);
+
+        HBox rockContainer = new HBox(5);
+        rockContainer.setAlignment(Pos.CENTER_RIGHT);
+        rockContainer.getChildren().addAll(brushSizeSlider, addRockButton);
+
         this.spawnCountField = new TextField("100");
         this.spawnCountField.setPrefWidth(60);
         this.spawnCountField.setStyle("-fx-padding: 10px; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
@@ -82,7 +94,7 @@ public class GameView extends StackPane {
 
         VBox buttonContainer = new VBox(10);
         buttonContainer.setAlignment(Pos.BOTTOM_RIGHT);
-        buttonContainer.getChildren().addAll(pauseButton, addHumanButton, multiSpawnContainer, addRockButton);
+        buttonContainer.getChildren().addAll(pauseButton, addHumanButton, multiSpawnContainer, rockContainer);
         buttonContainer.setPickOnBounds(false);
 
         // INIZIO CONFIGURAZIONE STATISTICHE
@@ -128,6 +140,7 @@ public class GameView extends StackPane {
     public ToggleButton getAddRockButton() { return this.addRockButton; }
     public TextField getSpawnCountField() { return this.spawnCountField; }
     public Button getSpawnMultipleButton() { return this.spawnMultipleButton; }
+    public Slider getBrushSizeSlider() { return this.brushSizeSlider; }
 
     // pre-render dell'intera mappa
     private void prerenderBackground() {
@@ -160,6 +173,28 @@ public class GameView extends StackPane {
             }
         }
         System.out.println("land pre-rendered succesfully");
+    }
+
+    // dipingiamo il pixel nella cache, costa pochissimo ed evita rendering dinamici
+    public void drawTerrainPixelCache(int gridX, int gridY, TerrainType type) {
+        if (this.backgroundCache == null) return;
+
+        Color color;
+        switch (type) {
+            case ROCK: color = Color.DARKSLATEGRAY; break;
+            case WATER: color = Color.CORNFLOWERBLUE; break;
+            case SAND: color = Color.rgb(194, 178, 128); break;
+            case MOUNTAIN: color = Color.rgb(81, 81, 81); break;
+            case GRASS:
+            default: color = Color.LIGHTGREEN; break;
+        }
+
+        PixelWriter pW = this.backgroundCache.getPixelWriter();
+        for (int di = 0; di < TILE_SIZE; di++) {
+            for (int dj = 0; dj < TILE_SIZE; dj++) {
+                pW.setColor(gridX * TILE_SIZE + dj, gridY * TILE_SIZE + di, color);
+            }
+        }
     }
 
     // rendering (Frustum Culling + Level of Detail)
