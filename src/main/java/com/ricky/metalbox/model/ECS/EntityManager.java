@@ -2,7 +2,7 @@ package com.ricky.metalbox.model.ECS;
 
 public class EntityManager {
 
-    public static final int MAX_ENTITIES = 200000;
+    public static final int MAX_ENTITIES = 800000;
     private int nextEntityId = 0;
 
     // ID recycling system (Object Pooling)

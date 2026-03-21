@@ -34,6 +34,12 @@ public class GameView extends StackPane {
     // buffer per terreno statico in memoria
     private WritableImage backgroundCache;
 
+    // variabili overlay LOD
+    private WritableImage entityOverlay;
+    private final int[] lastDrawX = new int[EntityManager.MAX_ENTITIES];
+    private final int[] lastDrawY = new int[EntityManager.MAX_ENTITIES];
+    private int lastDrawCount = 0;
+
     // variabili telecamera
     private double cameraX = 0;
     private double cameraY = 0;
@@ -248,15 +254,16 @@ public class GameView extends StackPane {
         // FINE CALCOLO FPS
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        double cw = canvas.getWidth();
-        double ch = canvas.getHeight();
+        // interi per le collisioni con i bordi dello schermo più in basso
+        int cw = (int) canvas.getWidth();
+        int ch = (int) canvas.getHeight();
 
         // sfondo oceano globale
         gc.clearRect(0, 0, cw, ch);
         gc.setFill(Color.web("#0F5E9C"));
         gc.fillRect(0, 0, cw, ch);
 
-        // posizionamento telecamera e applicazione zoom
+        // disegno dello sfondo statico usando le trasformazioni (telecamera)
         gc.save();
         gc.translate(-cameraX, -cameraY);
         gc.scale(zoom, zoom);
@@ -265,34 +272,30 @@ public class GameView extends StackPane {
             gc.drawImage(this.backgroundCache, 0, 0);
         }
 
-        // calcolo del quadrato della mappa attualmente visibile
+        // calcolo del quadrato della mappa attualmente visibile (Culling)
         int startX = Math.max(0, (int) (cameraX / (TILE_SIZE * zoom)));
         int startY = Math.max(0, (int) (cameraY / (TILE_SIZE * zoom)));
         int endX = Math.min(land.getSize(), (int) ((cameraX + cw) / (TILE_SIZE * zoom)) + 1);
         int endY = Math.min(land.getSize(), (int) ((cameraY + ch) / (TILE_SIZE * zoom)) + 1);
 
-        // disegno delle sole entità visibili
         EntityManager em = land.getEntityManager();
-
-        // soglia LOD: se lo zoom è inferiore a 0.5, la telecamera è lontana
         boolean isZoomedOut = zoom < 0.5;
 
-        for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
-            if (!em.isAlive[i]) continue;
+        if (!isZoomedOut) {
+            // ==========================================
+            // MODALITÀ ALTO DETTAGLIO (Zoom in)
+            // ==========================================
+            for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
+                if (!em.isAlive[i]) continue;
 
-            int ax = em.posX[i];
-            int ay = em.posY[i];
+                int ax = em.posX[i];
+                int ay = em.posY[i];
 
-            // Frustum Culling
-            if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
-                EntityType type = EntityType.values()[em.type[i]];
-                gc.setFill(type.getColor());
+                // Frustum Culling
+                if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
+                    EntityType type = EntityType.values()[em.type[i]];
+                    gc.setFill(type.getColor());
 
-                // LOD attivo
-                if (isZoomedOut) {
-                    gc.fillRect(ax * TILE_SIZE, ay * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 2);
-                } else {
-                    // LOD disattivato
                     for (Position relative : type.getShape()) {
                         int drawX = ax + relative.getX();
                         int drawY = ay + relative.getY();
@@ -300,10 +303,70 @@ public class GameView extends StackPane {
                     }
                 }
             }
-        }
-        gc.restore(); // reset telecamera per frame successivo
+            gc.restore(); // Rimuoviamo la telecamera
 
-        //aggiornamento ui stats
+        } else {
+            // ==========================================
+            // MODALITÀ MASSIMO LOD (Entity Overlay)
+            // ==========================================
+            gc.restore(); // rimuoviamo la telecamera per tornare in Screen Space
+
+            // se la finestra viene allargata ridimensioniamo l'overlay
+            if (entityOverlay == null || entityOverlay.getWidth() < cw || entityOverlay.getHeight() < ch) {
+                entityOverlay = new WritableImage(Math.max(cw, 1920), Math.max(ch, 1080));
+                lastDrawCount = 0; // Il nuovo overlay è già 100% trasparente
+            }
+
+            PixelWriter pW = entityOverlay.getPixelWriter();
+
+            // pulisce ESATTAMENTE E SOLO i pixel disegnati nel frame precedente O(N)
+            for (int i = 0; i < lastDrawCount; i++) {
+                int lx = lastDrawX[i];
+                int ly = lastDrawY[i];
+                // Inietta il colore 0 (Trasparente Assoluto)
+                pW.setArgb(lx, ly, 0);
+                pW.setArgb(lx + 1, ly, 0);
+                pW.setArgb(lx, ly + 1, 0);
+                pW.setArgb(lx + 1, ly + 1, 0);
+            }
+            lastDrawCount = 0;
+
+            // calcola e disegna le nuove posizioni
+            for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
+                if (!em.isAlive[i]) continue;
+
+                int ax = em.posX[i];
+                int ay = em.posY[i];
+
+                if (ax >= startX && ax <= endX && ay >= startY && ay <= endY) {
+
+                    // formula matematica (Traslazione)
+                    int screenX = (int) (ax * TILE_SIZE * zoom - cameraX);
+                    int screenY = (int) (ay * TILE_SIZE * zoom - cameraY);
+
+                    // verifica limiti per evitare crash del PixelWriter
+                    if (screenX >= 0 && screenX < cw - 1 && screenY >= 0 && screenY < ch - 1) {
+
+                        int argbColor = EntityType.values()[em.type[i]].getArgb();
+
+                        pW.setArgb(screenX, screenY, argbColor);
+                        pW.setArgb(screenX + 1, screenY, argbColor);
+                        pW.setArgb(screenX, screenY + 1, argbColor);
+                        pW.setArgb(screenX + 1, screenY + 1, argbColor);
+
+                        // salviamo le coordinate per poterle cancellare al frame successivo
+                        lastDrawX[lastDrawCount] = screenX;
+                        lastDrawY[lastDrawCount] = screenY;
+                        lastDrawCount++;
+                    }
+                }
+            }
+
+            // consegniamo l'intero foglio overlay a JavaFX
+            gc.drawImage(entityOverlay, 0, 0);
+        }
+
+        // aggiornamento ui stats in primo piano
         this.statsLabel.setText(String.format("FPS: %d\n(alive: %d | dead: %d)",
             currentFps, em.getAliveCount(), em.getDeadCount()));
     }
