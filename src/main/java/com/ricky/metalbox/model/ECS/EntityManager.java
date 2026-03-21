@@ -5,9 +5,13 @@ public class EntityManager {
     public static final int MAX_ENTITIES = 200000;
     private int nextEntityId = 0;
 
+    // ID recycling system (Object Pooling)
+    private final int[] freeIds = new int[MAX_ENTITIES];
+    private int freeIdsCount = 0;
+
     // statistics variables
     private int aliveEntitiesCount = 0;
-    private int deadEntitiesCount = 0;
+    private int totalDeathsCount = 0;
 
     // (DOD, Data-Oriented-Design) serie di array paralleli primitivi
     public final boolean[] isAlive = new boolean[MAX_ENTITIES];
@@ -34,21 +38,30 @@ public class EntityManager {
     }
 
     public int getAliveCount() { return aliveEntitiesCount; }
-    public int getDeadCount() { return deadEntitiesCount; }
+    public int getDeadCount() { return totalDeathsCount; }
 
     public synchronized int createEntity() {
-        if (nextEntityId >= MAX_ENTITIES) {
-            throw new RuntimeException("max entities limit reached");
-        }
-        int id = nextEntityId++; // per crearla basta muoversi avanti nell'array preallocato
-        isAlive[id] = true;
+        int id;
 
-        ageInTicks[id] = 0; // reset valori di default
+        // controllo per riciclare vecchio id
+        if (freeIdsCount > 0) {
+            freeIdsCount--;
+            id = freeIds[freeIdsCount];
+        } else {
+            // no id vecchi, ne crea uno
+            if (nextEntityId >= MAX_ENTITIES) {
+                throw new RuntimeException("max entities limit reached");
+            }
+            id = nextEntityId++;
+        }
+
+        isAlive[id] = true;
+        ageInTicks[id] = 0;
         maxLifespanInTicks[id] = 0;
         hasTarget[id] = false;
         thinkingTicksRemaining[id] = 0;
-        this.aliveEntitiesCount++;
 
+        this.aliveEntitiesCount++;
         return id;
     }
 
@@ -56,7 +69,11 @@ public class EntityManager {
         if (isAlive[id]) {
             isAlive[id] = false;
             this.aliveEntitiesCount--;
-            this.deadEntitiesCount++;
+            this.totalDeathsCount++;
+
+            // push nello stack degli id riutilizzabili
+            freeIds[freeIdsCount] = id;
+            freeIdsCount++;
         }
     }
 }

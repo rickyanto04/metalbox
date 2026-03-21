@@ -30,6 +30,9 @@
         4.1. LOD ("Level of Detail")
         **COMPLETATO, ora 200000 entità causano un lag minimo e sopportabile quando il dezoom è al minimo**
 
+        4.2. Object Pooling (Riciclo degli ID)
+        **COMPLETATO, ora ogni volta che c'è una nascita da generazione l'id nel nascituro viene prima pescato, se c'è, dallo stack degli id dei morti precedentemente**
+
 ### FASE 3: OTTIMIZZAZIONE VISIVA
 
 5.  Rendering Avanzato / Cambio Libreria Grafica
