@@ -124,13 +124,51 @@ public class GameView extends StackPane {
         this.prerenderBackground();
     }
 
-    // getter e setter per la telecamera
+    // getter e setter per la telecamera (with Clamping)
     public double getCameraX() { return cameraX; }
-    public void setCameraX(double cameraX) { this.cameraX = cameraX; }
+    public void setCameraX(double cameraX) {
+        this.cameraX = cameraX;
+        clampCamera();
+    }
     public double getCameraY() { return cameraY; }
-    public void setCameraY(double cameraY) { this.cameraY = cameraY; }
+    public void setCameraY(double cameraY) {
+        this.cameraY = cameraY;
+        clampCamera();
+    }
     public double getZoom() { return zoom; }
-    public void setZoom(double zoom) { this.zoom = zoom; }
+    public void setZoom(double zoom) {
+        this.zoom = zoom;
+        clampCamera();
+    }
+
+    // metodo per impedire alla telecamera di perdere la mappa
+    private void clampCamera() {
+        double cw = this.canvas.getWidth();
+        double ch = this.canvas.getHeight();
+
+        // evito calcoli a vuoto prima del render della mappa
+        if (cw == 0 || ch == 0) return;
+
+        double mapPixelWidth = this.land.getSize() * TILE_SIZE * this.zoom;
+        double mapPixelHeight = this.land.getSize() * TILE_SIZE * this.zoom;
+
+        // margine = almeno 150 pixel della mappa (o metà mappa se la si dezooma tantissimo) sempre visibili
+        double paddingX = Math.min(150.0, mapPixelWidth / 2.0);
+        double paddingY = Math.min(150.0, mapPixelHeight / 2.0);
+
+        // limiti massimi
+        // minX: limite quando trasciniamo verso destra (la mappa va a sinistra)
+        // maxX: limite quando trasciniamo verso sinistra (la mappa va a destra)
+        double minX = -(cw - paddingX);
+        double maxX = mapPixelWidth - paddingX;
+
+        double minY = -(ch - paddingY);
+        double maxY = mapPixelHeight - paddingY;
+
+        // applichiamo i limiti alla posizione attuale
+        this.cameraX = Math.max(minX, Math.min(this.cameraX, maxX));
+        this.cameraY = Math.max(minY, Math.min(this.cameraY, maxY));
+    }
 
     // getter generali
     public Canvas getCanvas() { return this.canvas; }
