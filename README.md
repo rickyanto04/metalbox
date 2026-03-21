@@ -38,6 +38,9 @@
 5.  Rendering Avanzato / Cambio Libreria Grafica
     **NON COMPLETATO (al momento NON NECESSARIO), per ora con tutte le ottimizzazioni fatte e il LOD non è necessario, inoltre non si raggiungeranno mai 100.000 o 200.000 unità contemporaneamente, nel caso in futuro si debba cambiare si passerà a LibGDX**
 
+        5.1. Motore grafico e telecamera
+        **COMPLETATO, fixato il panning per impedire allo user di perdere la mappa**
+
 ### FASE 4: MECCANICHE DI GIOCO
 
 6.  Entity Systems e AI
