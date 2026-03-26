@@ -24,10 +24,10 @@ public class LifespanSystem implements EntitySystem{
     public void update() {
         EntityManager em = land.getEntityManager();
 
-        for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
+        java.util.stream.IntStream.range(0, EntityManager.MAX_ENTITIES).parallel().forEach(i -> {
             // solo entità vive
             if (!em.isAlive[i] || em.type[i] != (byte) EntityType.HUMAN.ordinal()) {
-                continue;
+                return;
             }
 
             // aging
@@ -36,14 +36,14 @@ public class LifespanSystem implements EntitySystem{
             // 1. controllo morte di vecchiaia
             if (em.ageInTicks[i] >= em.maxLifespanInTicks[i]) {
                 ((AbstractLand)land).removeEntity(i);
-                continue;
+                return;
             }
 
             // 2. controllo morte casuale (incidenti, malattie, ecc...)
             if (ThreadLocalRandom.current().nextDouble() < RANDOM_DEATH_PROBABILITY) {
                 ((AbstractLand)land).removeEntity(i);
             }
-        }
+        });
     }
 
 }
