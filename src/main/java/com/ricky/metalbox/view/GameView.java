@@ -367,7 +367,7 @@ public class GameView extends StackPane {
         }
 
         // aggiornamento ui stats in primo piano
-        this.statsLabel.setText(String.format("FPS: %d\n(alive: %d | dead: %d)",
-            currentFps, em.getAliveCount(), em.getDeadCount()));
+        this.statsLabel.setText(String.format("FPS: %d\nWorld Age: %d years\n(alive: %d | dead: %d)",
+            currentFps, em.getWorldAgeYears(), em.getAliveCount(), em.getDeadCount()));
     }
 }

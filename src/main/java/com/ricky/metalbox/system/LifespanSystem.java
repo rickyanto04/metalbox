@@ -9,10 +9,8 @@ import com.ricky.metalbox.model.Land.Land;
 
 public class LifespanSystem implements EntitySystem{
 
-    // probabilità fissa di morire per cause esterne ad ogni tick.
-    // Con 0.0001 (0.01%), un'entità ha circa il 25% di probabilità di morire prematuramente
-    // nel corso di 80 anni (2400 ticks)
-    private static final double RANDOM_DEATH_PROBABILITY = 0.0001;
+    // Probabilità scalata proporzionalmente alla dilatazione del tempo
+    private static final double RANDOM_DEATH_PROBABILITY = 0.0001 / 75.0;
 
     private final Land land;
 
@@ -23,6 +21,8 @@ public class LifespanSystem implements EntitySystem{
     @Override
     public void update() {
         EntityManager em = land.getEntityManager();
+
+        em.incrementWorldAge();
 
         java.util.stream.IntStream.range(0, EntityManager.MAX_ENTITIES).parallel().forEach(i -> {
             // solo entità vive

@@ -53,16 +53,16 @@ public class InputController {
                 EntityManager em = ((AbstractLand)land).getEntityManager();
                 int entityId = em.createEntity();
 
-                // Configurazione tramite array primitivi
+                // configurazione tramite array primitivi
                 em.type[entityId] = (byte) com.ricky.metalbox.model.ECS.EntityType.HUMAN.ordinal();
                 em.posX[entityId] = spawnPos.getX();
                 em.posY[entityId] = spawnPos.getY();
 
-                // genera un'età gaussiana (media 85, deviazione standard 10) e la restringe tra 65 e 105
+                // genera un'età gaussiana (media 85, dev standard 10) e la restringe tra 65 e 105
                 int lifespanYears = (int) Math.max(65, Math.min(105, 85 + ThreadLocalRandom.current().nextGaussian() * 10));
 
-                // 1 anno = 100 ticks (puoi alzare questo valore se vuoi che vivano di più)
-                em.maxLifespanInTicks[entityId] = lifespanYears * 100;
+                // assegna la vita basandosi sulla scala temporale
+                em.maxLifespanInTicks[entityId] = lifespanYears * EntityManager.TICKS_PER_YEAR;
 
                 ((AbstractLand)land).registerEntity(entityId); //aggiunge umano a land e chunk
             }
@@ -126,8 +126,11 @@ public class InputController {
                             em.posX[entityId] = spawnPos.getX();
                             em.posY[entityId] = spawnPos.getY();
 
+                            // genera un'età gaussiana (media 85, dev standard 10) e la restringe tra 65 e 105
                             int lifespanYears = (int) Math.max(65, Math.min(105, 85 + ThreadLocalRandom.current().nextGaussian() * 10));
-                            em.maxLifespanInTicks[entityId] = lifespanYears * 100;
+
+                            // assegna la vita basandosi sulla scala temporale
+                            em.maxLifespanInTicks[entityId] = lifespanYears * EntityManager.TICKS_PER_YEAR;
 
                             // Registra l'entità nella mappa e nei chunk
                             ((AbstractLand)land).registerEntity(entityId);

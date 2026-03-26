@@ -13,6 +13,10 @@ public class EntityManager {
     private int aliveEntitiesCount = 0;
     private int totalDeathsCount = 0;
 
+    // world age
+    public static final int TICKS_PER_YEAR = 2250; // 75 secondi a 30 TPS
+    private long worldAgeTicks = 0;
+
     // (DOD, Data-Oriented-Design) serie di array paralleli primitivi
     public final boolean[] isAlive = new boolean[MAX_ENTITIES];
     public final byte[] type = new byte[MAX_ENTITIES]; // tipo di entità
@@ -39,6 +43,9 @@ public class EntityManager {
 
     public int getAliveCount() { return aliveEntitiesCount; }
     public int getDeadCount() { return totalDeathsCount; }
+
+    public void incrementWorldAge() { this.worldAgeTicks++; }
+    public int getWorldAgeYears() { return (int) (this.worldAgeTicks / TICKS_PER_YEAR); }
 
     public synchronized int createEntity() {
         int id;
