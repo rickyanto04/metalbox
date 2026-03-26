@@ -73,50 +73,65 @@ public abstract class AbstractLand implements Land {
         int oldChunkIdx = getChunkIndex(new Position(oldX, oldY));
         int newChunkIdx = getChunkIndex(new Position(newX, newY));
 
-        // SPATIAL LOCK, sincronizziamo solo la zona in cui l'entità sta cercando di entrare
-        synchronized (this.spatialChunks.get(newChunkIdx)) {
-            EntityType type = EntityType.values()[entityManager.type[entityId]];
+        // Lock Ordering (Ordiniamo sempre i lock dal minore al maggiore), evito deadlock
+        int firstLock = Math.min(oldChunkIdx, newChunkIdx);
+        int secondLock = Math.max(oldChunkIdx, newChunkIdx);
 
-            // libera temporaneamente le vecchie posizioni per evitare auto-collisioni
-            for(Position relative : type.getShape()) {
-                setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), false);
-            }
-
-            // controlla se le nuove celle sono libere
-            boolean canMove = true;
-            for(Position relative : type.getShape()) {
-                if (!isCellFree(newX + relative.getX(), newY + relative.getY())) {
-                    canMove = false;
-                    break;
+        // blocco del primo chunk
+        synchronized (this.spatialChunks.get(firstLock)) {
+            // se l'entità sta attraversando il confine tra due chunk, blocchiamo anche il secondo
+            if (firstLock != secondLock) {
+                synchronized (this.spatialChunks.get(secondLock)) {
+                    return executeMoveLogic(entityId, oldX, oldY, newX, newY, oldChunkIdx, newChunkIdx);
                 }
+            } else {
+                // se si muove all'interno dello stesso chunk, un solo lock è sufficiente
+                return executeMoveLogic(entityId, oldX, oldY, newX, newY, oldChunkIdx, newChunkIdx);
             }
-
-            // se bloccato, ripristina le vecchie e annulla
-            if (!canMove) {
-                for(Position relative : type.getShape()) {
-                    setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), true);
-                }
-                return false;
-            }
-
-            // se libero, occupa le nuove celle
-            for(Position relative : type.getShape()) {
-                setCellOccupied(new Position(newX + relative.getX(), newY + relative.getY()), true);
-            }
-
-            entityManager.posX[entityId] = newX;
-            entityManager.posY[entityId] = newY;
-
-            // aggiornamento spatial grid in sicurezza
-            if (oldChunkIdx != newChunkIdx) {
-                // rimuoviamo dal vecchio chunk (sincronizzando temporaneamente anche quello)
-                synchronized (this.spatialChunks.get(oldChunkIdx)) {
-                    this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
-                }
-                this.spatialChunks.get(newChunkIdx).add(entityId);
-            }
-            return true;
         }
+    }
+
+    // logica di spostamento 100% sicura e protetta dai lock superiori
+    private boolean executeMoveLogic(int entityId, int oldX, int oldY, int newX, int newY, int oldChunkIdx, int newChunkIdx) {
+        EntityType type = EntityType.values()[entityManager.type[entityId]];
+
+        // libera temporaneamente le vecchie posizioni
+        for(Position relative : type.getShape()) {
+            setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), false);
+        }
+
+        // controlla se le nuove celle sono libere
+        boolean canMove = true;
+        for(Position relative : type.getShape()) {
+            if (!isCellFree(newX + relative.getX(), newY + relative.getY())) {
+                canMove = false;
+                break;
+            }
+        }
+
+        // se bloccato, ripristina le vecchie e annulla
+        if (!canMove) {
+            for(Position relative : type.getShape()) {
+                setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), true);
+            }
+            return false;
+        }
+
+        // se libero, occupa le nuove celle
+        for(Position relative : type.getShape()) {
+            setCellOccupied(new Position(newX + relative.getX(), newY + relative.getY()), true);
+        }
+
+        entityManager.posX[entityId] = newX;
+        entityManager.posY[entityId] = newY;
+
+        // aggiornamento spatial grid
+        if (oldChunkIdx != newChunkIdx) {
+            this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
+            this.spatialChunks.get(newChunkIdx).add(entityId);
+        }
+
+        return true;
     }
 
     //ricerca entità vicine
