@@ -66,7 +66,7 @@
 ### FASE 5: ESPANSIONE MASSIVA
 
 9.  Region System & Multithreading
-    **NON COMPLETATO, al momento c'è divisione thread logica e thread javafx e mondo diviso in chunk 32x32 ma non ci sono thread diversi per ogni chunk**
+    **COMPLETATO, c'è divisione thread logica e thread javafx e mondo diviso in chunk 32x32 con multithreading su tutti gli spatial-chunks e Lock Ordering per evitare deadlock**
 
 10. Save System
     Azione: Serializzare i dati. Con l’ECS, salvare una partita è banale: basta iterare su tutti gli ID delle
