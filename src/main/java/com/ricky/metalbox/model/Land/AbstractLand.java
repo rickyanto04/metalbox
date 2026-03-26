@@ -69,43 +69,54 @@ public abstract class AbstractLand implements Land {
         initSpatialGridIfNeeded();
         int oldX = entityManager.posX[entityId];
         int oldY = entityManager.posY[entityId];
-        EntityType type = EntityType.values()[entityManager.type[entityId]];
 
-        // libera old positions (usiamo le primitive)
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), false);
-        }
-
-        boolean canMove = true;
-        for(Position relative : type.getShape()) {
-            if (!isCellFree(newX + relative.getX(), newY + relative.getY())) {
-                canMove = false;
-                break;
-            }
-        }
-
-        if (!canMove) {
-            for(Position relative : type.getShape()) {
-                setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), true);
-            }
-            return false;
-        }
-
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(newX + relative.getX(), newY + relative.getY()), true);
-        }
-
-        entityManager.posX[entityId] = newX;
-        entityManager.posY[entityId] = newY;
-
-        // aggiornamento spatial grid
         int oldChunkIdx = getChunkIndex(new Position(oldX, oldY));
         int newChunkIdx = getChunkIndex(new Position(newX, newY));
-        if (oldChunkIdx != newChunkIdx) {
-            this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
-            this.spatialChunks.get(newChunkIdx).add(entityId);
+
+        // SPATIAL LOCK, sincronizziamo solo la zona in cui l'entità sta cercando di entrare
+        synchronized (this.spatialChunks.get(newChunkIdx)) {
+            EntityType type = EntityType.values()[entityManager.type[entityId]];
+
+            // libera temporaneamente le vecchie posizioni per evitare auto-collisioni
+            for(Position relative : type.getShape()) {
+                setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), false);
+            }
+
+            // controlla se le nuove celle sono libere
+            boolean canMove = true;
+            for(Position relative : type.getShape()) {
+                if (!isCellFree(newX + relative.getX(), newY + relative.getY())) {
+                    canMove = false;
+                    break;
+                }
+            }
+
+            // se bloccato, ripristina le vecchie e annulla
+            if (!canMove) {
+                for(Position relative : type.getShape()) {
+                    setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), true);
+                }
+                return false;
+            }
+
+            // se libero, occupa le nuove celle
+            for(Position relative : type.getShape()) {
+                setCellOccupied(new Position(newX + relative.getX(), newY + relative.getY()), true);
+            }
+
+            entityManager.posX[entityId] = newX;
+            entityManager.posY[entityId] = newY;
+
+            // aggiornamento spatial grid in sicurezza
+            if (oldChunkIdx != newChunkIdx) {
+                // rimuoviamo dal vecchio chunk (sincronizzando temporaneamente anche quello)
+                synchronized (this.spatialChunks.get(oldChunkIdx)) {
+                    this.spatialChunks.get(oldChunkIdx).remove(Integer.valueOf(entityId));
+                }
+                this.spatialChunks.get(newChunkIdx).add(entityId);
+            }
+            return true;
         }
-        return true;
     }
 
     //ricerca entità vicine
@@ -134,18 +145,18 @@ public abstract class AbstractLand implements Land {
         initSpatialGridIfNeeded();
         int currentX = entityManager.posX[entityId];
         int currentY = entityManager.posY[entityId];
-        EntityType type = EntityType.values()[entityManager.type[entityId]];
-
-        // 1. libera la griglia delle collisioni fisiche
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(currentX + relative.getX(), currentY + relative.getY()), false);
-        }
-
-        // 2. rimuovi l'entità dal chunk dello Spatial Partitioning
         int chunkIdx = getChunkIndex(new Position(currentX, currentY));
-        this.spatialChunks.get(chunkIdx).remove(Integer.valueOf(entityId));
 
-        // 3. marca l'entità come morta nell'Entity Manager
-        entityManager.destroyEntity(entityId);
+        // SPATIAL LOCK, evita conflitti mentre puliamo il cadavere dalla mappa
+        synchronized (this.spatialChunks.get(chunkIdx)) {
+            EntityType type = EntityType.values()[entityManager.type[entityId]];
+
+            for(Position relative : type.getShape()) {
+                setCellOccupied(new Position(currentX + relative.getX(), currentY + relative.getY()), false);
+            }
+
+            this.spatialChunks.get(chunkIdx).remove(Integer.valueOf(entityId));
+            entityManager.destroyEntity(entityId);
+        }
     }
 }
