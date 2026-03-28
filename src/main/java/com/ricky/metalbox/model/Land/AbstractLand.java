@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ricky.metalbox.model.ECS.EntityManager;
-import com.ricky.metalbox.model.ECS.EntityType;
 import com.ricky.metalbox.model.Utilities.Position;
 
 // creata per poter cambiare la generazione della mappa in futuro ovvero poter avere mappe infinite, esagonali, ecc...
@@ -20,6 +19,9 @@ public abstract class AbstractLand implements Land {
     private final int CHUNK_SIZE = 32; // ogni partizione sarà 32x32 celle
     private int chunksPerRow;
 
+    //flag thread-safe
+    private volatile boolean isSpatialGridInitialized = false;
+
     @Override public EntityManager getEntityManager() { return this.entityManager; }
 
     // METODI ASTRATTI che la classe matrice (LandImpl) dovrà definire
@@ -28,16 +30,29 @@ public abstract class AbstractLand implements Land {
     // Essendo l'interfaccia Land a richiedere isCellFree, qui la implementerà il figlio,
     // ma noi possiamo usarla tranquillamente nei metodi sottostanti!
 
-    //lazy initialization quando serve per la prima volta
+    //lazy initialization thread-safe (pattern Double-Checked Locking)
     private void initSpatialGridIfNeeded() {
-        if (this.spatialChunks == null) {
-            //calcolo di quante partizioni ci stanno in una riga (es: 1000/32 = 31.25)
-            this.chunksPerRow = (int) Math.ceil((double) getSize() / CHUNK_SIZE);
-            int totalChunks = this.chunksPerRow * this.chunksPerRow;
+        // Controllo 1: Senza lock (velocissimo, per non rallentare i 30 TPS del gioco)
+        if (!isSpatialGridInitialized) {
 
-            this.spatialChunks = new ArrayList<>(totalChunks);
-            for (int i = 0; i < totalChunks; i++) {
-                this.spatialChunks.add(ConcurrentHashMap.newKeySet());
+            // LOCK: Se non è inizializzata, solo un thread alla volta può entrare qui
+            synchronized (this) {
+
+                // Controllo 2: Se un altro thread l'ha inizializzata mentre aspettavamo fuori dal lock, saltiamo
+                if (!isSpatialGridInitialized) {
+                    this.chunksPerRow = (int) Math.ceil((double) getSize() / CHUNK_SIZE);
+                    int totalChunks = this.chunksPerRow * this.chunksPerRow;
+
+                    // Creiamo la griglia in una variabile locale e temporanea
+                    List<Set<Integer>> tempChunks = new ArrayList<>(totalChunks);
+                    for (int i = 0; i < totalChunks; i++) {
+                        tempChunks.add(ConcurrentHashMap.newKeySet());
+                    }
+
+                    // Assegnazione Atomica: pubblichiamo la lista solo quando è 100% pronta
+                    this.spatialChunks = tempChunks;
+                    this.isSpatialGridInitialized = true;
+                }
             }
         }
     }
@@ -52,15 +67,13 @@ public abstract class AbstractLand implements Land {
     // aggiunta di entità al database
     public void registerEntity(final int entityId) {
         initSpatialGridIfNeeded();
-        Position pos = new Position(entityManager.posX[entityId], entityManager.posY[entityId]);
+        int cx = entityManager.posX[entityId];
+        int cy = entityManager.posY[entityId];
 
-        EntityType type = EntityType.values()[entityManager.type[entityId]];
+        // occupa fisicamente solo la cella centrale 1x1
+        setCellOccupied(new Position(cx, cy), true);
 
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(pos.getX() + relative.getX(), pos.getY() + relative.getY()), true);
-        }
-
-        int chunkIdx = getChunkIndex(pos);
+        int chunkIdx = getChunkIndex(new Position(cx, cy));
         this.spatialChunks.get(chunkIdx).add(entityId);
     }
 
@@ -93,34 +106,18 @@ public abstract class AbstractLand implements Land {
 
     // logica di spostamento 100% sicura e protetta dai lock superiori
     private boolean executeMoveLogic(int entityId, int oldX, int oldY, int newX, int newY, int oldChunkIdx, int newChunkIdx) {
-        EntityType type = EntityType.values()[entityManager.type[entityId]];
+        // libera temporaneamente la vecchia posizione centrale 1x1
+        setCellOccupied(new Position(oldX, oldY), false);
 
-        // libera temporaneamente le vecchie posizioni
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), false);
-        }
-
-        // controlla se le nuove celle sono libere
-        boolean canMove = true;
-        for(Position relative : type.getShape()) {
-            if (!isCellFree(newX + relative.getX(), newY + relative.getY())) {
-                canMove = false;
-                break;
-            }
-        }
-
-        // se bloccato, ripristina le vecchie e annulla
-        if (!canMove) {
-            for(Position relative : type.getShape()) {
-                setCellOccupied(new Position(oldX + relative.getX(), oldY + relative.getY()), true);
-            }
+        // controlla se la nuova cella centrale è libera
+        if (!isCellFree(newX, newY)) {
+            // 3. Se bloccato, ripristina la vecchia cella e annulla il movimento
+            setCellOccupied(new Position(oldX, oldY), true);
             return false;
         }
 
-        // se libero, occupa le nuove celle
-        for(Position relative : type.getShape()) {
-            setCellOccupied(new Position(newX + relative.getX(), newY + relative.getY()), true);
-        }
+        // se libero, occupa la nuova cella centrale
+        setCellOccupied(new Position(newX, newY), true);
 
         entityManager.posX[entityId] = newX;
         entityManager.posY[entityId] = newY;
@@ -164,11 +161,9 @@ public abstract class AbstractLand implements Land {
 
         // SPATIAL LOCK, evita conflitti mentre puliamo il cadavere dalla mappa
         synchronized (this.spatialChunks.get(chunkIdx)) {
-            EntityType type = EntityType.values()[entityManager.type[entityId]];
 
-            for(Position relative : type.getShape()) {
-                setCellOccupied(new Position(currentX + relative.getX(), currentY + relative.getY()), false);
-            }
+            // libera solo la cella centrale 1x1
+            setCellOccupied(new Position(currentX, currentY), false);
 
             this.spatialChunks.get(chunkIdx).remove(Integer.valueOf(entityId));
             entityManager.destroyEntity(entityId);

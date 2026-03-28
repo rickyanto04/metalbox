@@ -254,6 +254,8 @@ public class GameView extends StackPane {
         // FINE CALCOLO FPS
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setImageSmoothing(false); // per eliminare il Bilinear Filtering
+
         // interi per le collisioni con i bordi dello schermo più in basso
         int cw = (int) canvas.getWidth();
         int ch = (int) canvas.getHeight();
@@ -292,15 +294,15 @@ public class GameView extends StackPane {
                 int ay = em.posY[i];
 
                 // Frustum Culling
-                if (ax >= startX - 5 && ax <= endX + 5 && ay >= startY - 5 && ay <= endY + 5) {
-                    EntityType type = EntityType.values()[em.type[i]];
-                    gc.setFill(type.getColor());
+                if (ax >= startX - 2 && ax <= endX + 2 && ay >= startY - 2 && ay <= endY + 2) {
 
-                    for (Position relative : type.getShape()) {
-                        int drawX = ax + relative.getX();
-                        int drawY = ay + relative.getY();
-                        gc.fillRect(drawX * TILE_SIZE, drawY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    }
+                    javafx.scene.image.Image sprite = EntityType.values()[em.type[i]].getSprite();
+
+                    // centriamo lo sprite 5x5 rispetto alla cella logica 1x1
+                    double drawX = (ax * TILE_SIZE) - 2;
+                    double drawY = (ay * TILE_SIZE) - 2;
+
+                    gc.drawImage(sprite, drawX, drawY);
                 }
             }
             gc.restore(); // Rimuoviamo la telecamera

@@ -10,7 +10,7 @@ import com.ricky.metalbox.model.Land.Land;
 public class LifespanSystem implements EntitySystem{
 
     // Probabilità scalata proporzionalmente alla dilatazione del tempo
-    private static final double RANDOM_DEATH_PROBABILITY = 0.0001 / 75.0;
+    private static final double RANDOM_DEATH_PROBABILITY = 0.00001 / 75.0;
 
     private final Land land;
 

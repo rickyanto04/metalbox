@@ -1,33 +1,47 @@
 package com.ricky.metalbox.model.ECS;
 
-import java.util.List;
-import com.ricky.metalbox.model.Utilities.Position;
+import java.io.InputStream;
+
+import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
 import javafx.scene.paint.Color;
 
 public enum EntityType {
     // definizione di ogni tipo di entità
-    HUMAN(Color.BLACK, List.of(
-        new Position(0, 0), new Position(2, 0),
-        new Position(1, 1), new Position(1, 2)
-    ));
+    HUMAN("human.png");
 
-    private final Color color;
-    private final List<Position> shape;
-    private final int argb;
+    private final String resourceName;
+    private Color averageColor; //per LOD intermedio
+    private int argb; //per pixelwriter LOD
+    private Image sprite;
 
-    EntityType(Color color, List<Position> shape) {
-        this.color = color;
-        this.shape = shape;
-
-        // calcoliamo dell'intero a 32-bit (Alpha, Red, Green, Blue)
-        // per iniezioni dirette di pixel
-        this.argb = (255 << 24) |
-                    ((int)(color.getRed() * 255) << 16) |
-                    ((int)(color.getGreen() * 255) << 8) |
-                    ((int)(color.getBlue() * 255));
+    EntityType(final String resourceName) {
+        this.resourceName = resourceName;
+        loadResource();
     }
 
-    public Color getColor() { return this.color; }
-    public List<Position> getShape() { return this.shape; }
+    private void loadResource() {
+        try {
+            InputStream is = getClass().getResourceAsStream("/" + resourceName);
+            if (is == null) {
+                throw new RuntimeException("Resource not found: " + resourceName);
+            }
+            this.sprite = new Image(is);
+
+            PixelReader pr = this.sprite.getPixelReader();
+            this.averageColor = pr.getColor(2, 2); // colore del centro per il LOD
+            this.argb = (255 << 24) |
+                        ((int)(averageColor.getRed() * 255) << 16) |
+                        ((int)(averageColor.getGreen() * 255) << 8) |
+                        ((int)(averageColor.getBlue() * 255));
+
+        } catch (final Exception e) {
+            e.printStackTrace();
+            System.err.println("Failed to load sprite for " + this.name());
+        }
+    }
+
+    public Image getSprite() { return this.sprite; }
+    public Color getColor() { return this.averageColor; } //fallback
     public int getArgb() { return this.argb; }
 }
