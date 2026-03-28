@@ -37,6 +37,9 @@ public class EntityManager {
     // thinking time entità
     public final int[] thinkingTicksRemaining = new int[MAX_ENTITIES];
 
+    // ritardo movimento entità
+    public final byte[] moveCooldown = new byte[MAX_ENTITIES];
+
     public EntityManager() {
         //tutto empty
     }
@@ -67,6 +70,7 @@ public class EntityManager {
         maxLifespanInTicks[id] = 0;
         hasTarget[id] = false;
         thinkingTicksRemaining[id] = 0;
+        moveCooldown[id] = 0;
 
         this.aliveEntitiesCount++;
         return id;

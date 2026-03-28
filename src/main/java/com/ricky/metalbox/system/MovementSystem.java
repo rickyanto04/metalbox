@@ -78,10 +78,21 @@ public class MovementSystem implements EntitySystem{
             int deltaY = Integer.compare(targetY, currentY);
 
             if (deltaX != 0 || deltaY != 0) {
+
+                // LOGICA DI RALLENTAMENTO
+                // Se il cooldown è attivo, scalalo e salta il movimento in questo tick
+                if (em.moveCooldown[id] > 0) {
+                    em.moveCooldown[id]--;
+                    return;
+                }
+
                 // moveEntity ora è protetto dallo SpatialLock in abstractLand
                 boolean moved = this.land.moveEntity(id, currentX + deltaX, currentY + deltaY);
 
-                if (!moved) {
+                if (moved) {
+                    // Passo effettuato: imposta 2 tick di pausa
+                    em.moveCooldown[id] = 2;
+                } else {
                     boolean movedX = false;
                     boolean movedY = false;
 
@@ -92,7 +103,11 @@ public class MovementSystem implements EntitySystem{
                         movedY = this.land.moveEntity(id, currentX, currentY + deltaY);
                     }
 
-                    if (!movedX && !movedY) {
+                    if (movedX || movedY) {
+                        // Ha strisciato sul muro: applica comunque il ritardo
+                        em.moveCooldown[id] = 2;
+                    } else {
+                        // Totalmente bloccato: smette di camminare e pensa a un'altra strada
                         em.hasTarget[id] = false;
                         em.thinkingTicksRemaining[id] = ThreadLocalRandom.current().nextInt(5) + 2;
                     }

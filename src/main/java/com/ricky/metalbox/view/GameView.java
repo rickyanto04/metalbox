@@ -287,6 +287,12 @@ public class GameView extends StackPane {
             // ==========================================
             // MODALITÀ ALTO DETTAGLIO (Zoom in)
             // ==========================================
+
+            // calcoliamo un tempo globale per l'animazione indipendente dagli FPS
+            // modifica questo divisore per farli saltare più velocemente o più lentamente
+            double animTime = System.nanoTime() / 120_000_000.0;
+            double bounceHeight = 5.0; // altezza massima del salto in pixel
+
             for (int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
                 if (!em.isAlive[i]) continue;
 
@@ -298,9 +304,17 @@ public class GameView extends StackPane {
 
                     javafx.scene.image.Image sprite = EntityType.values()[em.type[i]].getSprite();
 
-                    // centriamo lo sprite 5x5 rispetto alla cella logica 1x1
                     double drawX = (ax * TILE_SIZE) - 2;
                     double drawY = (ay * TILE_SIZE) - 2;
+
+                    // animazione procedurale (solo se si stanno muovendo)
+                    if (em.hasTarget[i] && em.thinkingTicksRemaining[i] == 0) {
+                        // L'ID dell'entità (i) funziona come "fase" dell'onda.
+                        // In questo modo ogni omino salta con un tempismo leggermente diverso dagli altri,
+                        // evitando l'effetto robotico di un esercito che salta in perfetta sincronia.
+                        double bounce = Math.abs(Math.sin(animTime + i)) * bounceHeight;
+                        drawY -= bounce;
+                    }
 
                     gc.drawImage(sprite, drawX, drawY);
                 }
