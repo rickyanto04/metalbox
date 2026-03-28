@@ -86,7 +86,7 @@ public class GameView extends StackPane {
         rockContainer.setAlignment(Pos.CENTER_RIGHT);
         rockContainer.getChildren().addAll(brushSizeSlider, addRockButton);
 
-        this.spawnCountField = new TextField("100");
+        this.spawnCountField = new TextField("10000");
         this.spawnCountField.setPrefWidth(60);
         this.spawnCountField.setStyle("-fx-padding: 10px; -fx-border-color: black; -fx-border-radius: 3px; -fx-background-radius: 3px;");
 

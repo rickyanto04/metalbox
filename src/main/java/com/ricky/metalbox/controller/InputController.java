@@ -58,8 +58,8 @@ public class InputController {
                 em.posX[entityId] = spawnPos.getX();
                 em.posY[entityId] = spawnPos.getY();
 
-                // genera un'età gaussiana (media 85, dev standard 10) e la restringe tra 65 e 105
-                int lifespanYears = (int) Math.max(65, Math.min(105, 85 + ThreadLocalRandom.current().nextGaussian() * 10));
+                // genera un'età gaussiana (media 95, dev standard 10) e la restringe tra 65 e 115
+                int lifespanYears = (int) Math.max(65, Math.min(115, 95 + ThreadLocalRandom.current().nextGaussian() * 10));
 
                 // assegna la vita basandosi sulla scala temporale
                 em.maxLifespanInTicks[entityId] = lifespanYears * EntityManager.TICKS_PER_YEAR;
@@ -126,8 +126,8 @@ public class InputController {
                             em.posX[entityId] = spawnPos.getX();
                             em.posY[entityId] = spawnPos.getY();
 
-                            // genera un'età gaussiana (media 85, dev standard 10) e la restringe tra 65 e 105
-                            int lifespanYears = (int) Math.max(65, Math.min(105, 85 + ThreadLocalRandom.current().nextGaussian() * 10));
+                            // genera un'età gaussiana (media 85, dev standard 10) e la restringe tra 65 e 115
+                            int lifespanYears = (int) Math.max(65, Math.min(115, 95 + ThreadLocalRandom.current().nextGaussian() * 10));
 
                             // assegna la vita basandosi sulla scala temporale
                             em.maxLifespanInTicks[entityId] = lifespanYears * EntityManager.TICKS_PER_YEAR;

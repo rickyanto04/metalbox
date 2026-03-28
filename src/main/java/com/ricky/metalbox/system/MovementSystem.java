@@ -39,10 +39,10 @@ public class MovementSystem implements EntitySystem{
 
                 if (hasTarget) {
                     // ThreadLocalRandom = random veloci senza conflitti tra thread
-                    em.thinkingTicksRemaining[id] = ThreadLocalRandom.current().nextInt(60) + 15;
+                    em.thinkingTicksRemaining[id] = ThreadLocalRandom.current().nextInt(500) + 15;
                 }
 
-                int radius = 20;
+                int radius = 50;
                 int tX = 0, tY = 0;
                 boolean found = false;
                 int attempts = 0;
